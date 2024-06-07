@@ -2,12 +2,12 @@
 
 :root{
 
-    --bg-black-900:#f2f2fc;
+    --bg-black-900:#dee2e6;
     --bg-black-100:#fdf9ff;
-    --bg-black-50:#e8dfec;
+    --bg-black-50:#ced4da;
     --text-black-900:#302e4d;
     --text-black-700:#504e70;
-    --skin-color:#ec1839;
+    --skin-color:#212529;
 
 }
 
@@ -133,7 +133,8 @@ ul{
 /* aside */
 .aside{
     width: 270px;
-    background: var(--bg-black-100);
+    /* background: var(--bg-black-100); */
+    background: #adb5bd;
     position: fixed;
     left: 0;
     top: 0;
@@ -235,6 +236,7 @@ ul{
 
 .aside .nav{
     margin-top: 50px;
+    cursor: pointer;
 }
 
 .aside .nav li{
@@ -561,6 +563,114 @@ h3.my-profession{
     line-height: 25px;
 }
 
+.progress{
+    background-color: var(--bg-black-50);
+    height: 7px;
+    border-radius: 4px;
+    width: 100%;
+    position: relative;
+}
+
+.progress .progress-in{
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    border-radius: 4px;
+    background-color: var(--skin-color);
+}
+
+.skill-percent{
+    position: absolute;
+    right: 0;
+    color: var(--text-black-900);
+    top: 2px;
+    right: 50%;
+    font-weight: 400;
+    line-height: 40px;
+}
+
+/* Social Media Section */
+.card {
+    display: flex;
+    height: 70px;
+    width: 270px;
+  }
+  
+  .card svg {
+    position: absolute;
+    display: flex;
+    width: 60%;
+    height: 100%;
+    font-size: 24px;
+    font-weight: 700;
+    opacity: 1;
+    transition: opacity 0.25s;
+    z-index: 2;
+    cursor: pointer;
+  }
+  
+  .card .social-link1,.card .social-link2,.card .social-link3,.card .social-link4 {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 25%;
+    color: whitesmoke;
+    font-size: 24px;
+    text-decoration: none;
+    transition: 0.25s;
+    border-radius: 50px;
+    margin: 10px;
+  }
+  
+  .card svg {
+    transform: scale(1);
+  }
+  
+  .card .social-link1:hover {
+    background: #f09433;
+    background: -moz-linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+    background: -webkit-linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);
+    background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f09433', endColorstr='#bc1888',GradientType=1 );
+    animation: bounce_613 0.4s linear;
+  }
+  
+  .card .social-link2:hover {
+    background-color: #00ccff;
+    animation: bounce_613 0.4s linear;
+  }
+  
+  .card .social-link3:hover {
+    background-color: #5865f2;
+    animation: bounce_613 0.4s linear;
+  }
+  
+  .card .social-link4:hover {
+    background-color: #12a50b;
+    animation: bounce_613 0.4s linear;
+  }
+  
+  @keyframes bounce_613 {
+    40% {
+      transform: scale(1.4);
+    }
+  
+    60% {
+      transform: scale(0.8);
+    }
+  
+    80% {
+      transform: scale(1.2);
+    }
+  
+    100% {
+      transform: scale(1);
+    }
+  }
+
+
 /* Contact Section */
 
 .contact-title{
@@ -881,15 +991,15 @@ h3.my-profession{
         margin-bottom: 10px;
     }
     .about .about-content .personal-info .info-item {
-    flex: 0 0 45%;
-    max-width: 100%;
-    font-weight: 600;
-    padding: 10px;
-    font-size: 16px;
-    color: var(--text-black-900);
-    border-bottom: 1px solid var(--bg-black-50);
-    border-left: 2px solid var(--bg-black-50);
-    margin-bottom: 10px;
-    transition: all 0.3s ease;
-}
+        flex: 0 0 45%;
+        max-width: 100%;
+        font-weight: 600;
+        padding: 10px;
+        font-size: 16px;
+        color: var(--text-black-900);
+        border-bottom: 1px solid var(--bg-black-50);
+        border-left: 2px solid var(--bg-black-50);
+        margin-bottom: 10px;
+        transition: all 0.3s ease;
+    }
 }
