@@ -3,7 +3,7 @@
 :root{
 
     --bg-black-900:#dee2e6;
-    --bg-black-100:#adb5bd;
+    --bg-black-100:#fdf9ff;
     --bg-black-50:#ced4da;
     --text-black-900:#302e4d;
     --text-black-700:#504e70;
@@ -909,7 +909,7 @@ h3.my-profession{
         flex-direction: column;
         width: 100%;
         align-items: center;
-        background: var(--bg-black-100);
+        background: #adb5bd;
         border-radius: 10px;
         padding: 10px 0;
         margin-top: 10px;
@@ -933,6 +933,7 @@ h3.my-profession{
         width: 40px;
         height: 40px;
         cursor: pointer;
+        background-color: #adb5bd;
     }
 
     .aside .nav-toggler span {
