@@ -933,7 +933,7 @@ h3.my-profession{
         width: 40px;
         height: 40px;
         cursor: pointer;
-        background-color: #adb5bd;
+        background-color: transparent;
     }
 
     .aside .nav-toggler span {
