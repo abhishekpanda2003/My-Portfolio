@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Component, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import {
   Mail, Phone, Instagram, Linkedin, Twitter, MessageCircle,
@@ -22,6 +22,27 @@ const C = {
 };
 
 const FONT_IMPORT = `@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;500;600;700&display=swap');`;
+
+/* ---------------------------------------------------------------
+   ERROR BOUNDARY — so a single failing part (e.g. the 3D graph)
+   can't blank out the whole page.
+--------------------------------------------------------------- */
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error, info) {
+    console.error("Section failed to render:", error, info);
+  }
+  render() {
+    if (this.state.hasError) return this.props.fallback ?? null;
+    return this.props.children;
+  }
+}
 
 /* ---------------------------------------------------------------
    CONTENT — bio, expertise & philosophy sourced from your LinkedIn
@@ -112,22 +133,25 @@ function SkillGraph() {
     const mount = mountRef.current;
     if (!mount) return;
 
-    const width = mount.clientWidth;
-    const height = mount.clientHeight;
+    let renderer, raf, onMouseMove, onResize;
 
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 100);
-    camera.position.set(0, 0, 9);
+    try {
+      const width = mount.clientWidth || 800;
+      const height = mount.clientHeight || 600;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    mount.appendChild(renderer.domElement);
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 100);
+      camera.position.set(0, 0, 9);
 
-    const group = new THREE.Group();
-    scene.add(group);
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      mount.appendChild(renderer.domElement);
 
-    // faint wireframe sphere shell (blueprint feel)
+      const group = new THREE.Group();
+      scene.add(group);
+
+      // faint wireframe sphere shell (blueprint feel)
     const shell = new THREE.Mesh(
       new THREE.IcosahedronGeometry(3.6, 1),
       new THREE.MeshBasicMaterial({ color: 0x1b2b44, wireframe: true, transparent: true, opacity: 0.35 })
@@ -193,7 +217,7 @@ function SkillGraph() {
     scene.add(dust);
 
     let mouseX = 0, mouseY = 0, targetRotX = 0, targetRotY = 0;
-    const onMouseMove = (e) => {
+    onMouseMove = (e) => {
       const rect = mount.getBoundingClientRect();
       mouseX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       mouseY = ((e.clientY - rect.top) / rect.height) * 2 - 1;
@@ -203,7 +227,6 @@ function SkillGraph() {
     mount.addEventListener("mousemove", onMouseMove);
 
     const projected = new THREE.Vector3();
-    let raf;
     const clock = new THREE.Clock();
 
     const animate = () => {
@@ -233,20 +256,27 @@ function SkillGraph() {
     };
     animate();
 
-    const onResize = () => {
+    onResize = () => {
       const w = mount.clientWidth, h = mount.clientHeight;
+      if (!w || !h) return;
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
     };
     window.addEventListener("resize", onResize);
+    } catch (err) {
+      // 3D graph failed (e.g. no WebGL support) — fail quietly, rest of the site still renders.
+      console.error("SkillGraph failed to initialize:", err);
+    }
 
     return () => {
       cancelAnimationFrame(raf);
-      mount.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("resize", onResize);
-      renderer.dispose();
-      if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
+      if (mount && onMouseMove) mount.removeEventListener("mousemove", onMouseMove);
+      if (onResize) window.removeEventListener("resize", onResize);
+      if (renderer) {
+        renderer.dispose();
+        if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
+      }
     };
   }, []);
 
@@ -471,7 +501,9 @@ export default function Portfolio() {
 
       {/* HOME / HERO */}
       <section id="home" style={{ position: "relative", minHeight: "100vh", display: "flex", alignItems: "center", overflow: "hidden", paddingTop: 72 }}>
-        <SkillGraph />
+        <ErrorBoundary fallback={null}>
+          <SkillGraph />
+        </ErrorBoundary>
         <div style={{ position: "relative", zIndex: 2, maxWidth: 1100, margin: "0 auto", padding: "0 24px", width: "100%", pointerEvents: "none" }}>
           <div style={{ maxWidth: 560 }}>
             <div style={{ fontFamily: "'JetBrains Mono', monospace", color: C.teal, fontSize: 13, marginBottom: 18, letterSpacing: "0.04em" }}>
