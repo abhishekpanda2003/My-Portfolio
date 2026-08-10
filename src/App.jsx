@@ -72,7 +72,7 @@ const PROFILE = {
 
 const SOCIALS = [
   { icon: Instagram, url: "https://www.instagram.com/a.b.h.i._22/", label: "Instagram" },
-  { icon: Twitter, url: "https://twitter.com/", label: "Twitter" },
+  { icon: Twitter, url: "https://x.com/abp_2203", label: "Twitter" },
   { icon: Linkedin, url: "https://www.linkedin.com/in/abhishekpanda2003/", label: "LinkedIn" },
   { icon: MessageCircle, url: "https://wa.me/7383699772", label: "WhatsApp" },
 ];
