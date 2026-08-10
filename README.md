@@ -7,13 +7,12 @@ A React + Vite personal portfolio website built with a custom 3D skill graph usi
 ```
 index.html            application shell
 src/main.jsx          React application entry point
-src/App.jsx           global styles, header/footer, routing, and the home page
-src/Projects.jsx      standalone Projects page (own route, not a home section)
+src/App.jsx           global styles, header/footer, and the page itself
+src/Projects.jsx      Projects section — project data + filterable card grid
 src/Card3D.jsx        pointer-driven 3D card: tilt, cursor glow, parallax layers
-src/ParticleField.jsx interactive 3D constellation background (both pages)
+src/ParticleField.jsx interactive 3D constellation background
 src/ui.jsx            shared UI primitives (ErrorBoundary, TiltCard, Reveal, SectionShell…)
-src/theme.js          palette, fonts, and layout tokens shared by every page
-src/useHashRoute.js   minimal hash router (no routing dependency)
+src/theme.js          palette, fonts, and layout tokens shared across the site
 vite.config.js        Vite configuration
 package.json          dependencies and scripts
 ```
@@ -25,29 +24,21 @@ package.json          dependencies and scripts
 - `npm run build` — build production assets
 - `npm run preview` — preview the production build locally
 
-## Pages & routing
+## Page structure
 
-The site has two pages, switched by a tiny hash router in `src/useHashRoute.js`:
+The site is a single scrolling page. Sections, in order:
 
-| Route         | Renders                                        |
-| ------------- | ---------------------------------------------- |
-| `#/`          | Home — hero, About, Skills, Contact             |
-| `#/projects`  | Projects — filterable grid of project cards     |
+| Section    | Source                            |
+| ---------- | --------------------------------- |
+| `home`     | hero + 3D skill graph, `App.jsx`  |
+| `about`    | bio, education, experience        |
+| `projects` | `src/Projects.jsx`                |
+| `skills`   | skill bars                        |
+| `contact`  | contact cards + Formspree form    |
 
-Hash routing (`#/projects`) is used instead of path routing (`/projects`) because the
-site is deployed as a purely static bundle. A hash is never sent to the server, so deep
-links and hard refreshes work on Vercel, GitHub Pages, and any other static host with no
-rewrite rules and no extra dependencies.
-
-**Projects is a separate page, not a home-page section** — it is reachable only from the
-nav tab and does not appear while scrolling the home page.
-
-### Adding a nav item
-
-Edit the `NAV` array in `src/App.jsx`:
-
-- `{ id: "about", label: "About" }` — scrolls to the `id` of a section on the home page.
-- `{ id: "projects", label: "Projects", page: true }` — routes to a standalone page.
+Every nav item scrolls to a section `id`; there is no router. To add one, add an entry
+to the `NAV` array in `src/App.jsx` whose `id` matches a section's `id`, and give that
+section a `SectionShell id="…"`.
 
 ## Editing content
 
@@ -57,9 +48,8 @@ All content is plain data at the top of its file — no markup editing required.
   `EXPERIENCE`, `SKILLS`, and `SOCIALS` constants in `src/App.jsx`.
 - **Projects** — the `PROJECTS` array in `src/Projects.jsx`. Each entry accepts
   `title`, `tagline`, `detail`, `tech[]`, `group`, `year`, `status`, `repo`, `demo`,
-  and `featured`. The filter chips at the top of the page are generated from `group`,
-  so adding a new group needs no other change. Leave `repo` or `demo` as `""` to hide
-  that button.
+  and `featured`. The filter chips above the grid are generated from `group`, so adding
+  a new group needs no other change. Leave `repo` or `demo` as `""` to hide that button.
 - **Colors and fonts** — the `C` token object in `src/theme.js` restyles the whole site.
 
 ## The 3D project cards
@@ -82,20 +72,19 @@ prefer reduced motion.
 
 ## The constellation background
 
-`src/ParticleField.jsx` renders an interactive Three.js constellation behind both
-pages: a drifting cloud of points where any two closer than a threshold are joined by
-a line, brightest when nearest — so the mesh continuously forms and dissolves. The
-field parallaxes toward the cursor and points are pushed away from it.
+`src/ParticleField.jsx` renders an interactive Three.js constellation behind the whole
+page: a drifting cloud of points where any two closer than a threshold are joined by a
+line, brightest when nearest — so the mesh continuously forms and dissolves. The field
+parallaxes toward the cursor and points are pushed away from it.
 
 It is `position: fixed`, so it stays locked to the viewport for the whole scroll,
-including behind the footer. Sections paint above it at `z-index: 1`; on the home page
-they use see-through backgrounds so the field shows through.
+including behind the footer. Sections paint above it at `z-index: 1` with see-through
+backgrounds so the field shows through.
 
-On the home page it takes a `holeRef` pointing at the hero. A radial mask punches a
-clear circle around that element so the particles surround the 3D skill graph instead
-of showing through it, and the hole tracks the hero's on-screen position as you scroll,
-travelling off-screen naturally once you pass it. Omit `holeRef` (as the Projects page
-does) for an unmasked field.
+It takes a `holeRef` pointing at the hero. A radial mask punches a clear circle around
+that element so the particles surround the 3D skill graph instead of showing through
+it, and the hole tracks the hero's on-screen position as you scroll, travelling
+off-screen naturally once you pass it. Omit `holeRef` for an unmasked field.
 
 > The fixed positioning depends on no ancestor setting `transform`, `filter`,
 > `perspective`, `contain`, or `will-change` — any of those re-anchor a fixed element

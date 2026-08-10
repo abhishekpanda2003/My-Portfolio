@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import {
-  Mail, Phone, Instagram, Linkedin, Twitter, MessageCircle,
+  Mail, Instagram, Linkedin, Twitter,
   Menu, X, Download, ChevronDown, GraduationCap, Briefcase,
 } from "lucide-react";
 
 import { C, MONO, SANS, HEADER_H, FONT_IMPORT } from "./theme";
 import { ErrorBoundary, TiltCard, Reveal, CommentHeader, SectionShell } from "./ui";
-import { useHashRoute, navigate, ROUTES } from "./useHashRoute";
 import { CARD3D_CSS } from "./Card3D";
 import ParticleField from "./ParticleField";
 import Projects from "./Projects";
@@ -44,7 +43,9 @@ const PROFILE = {
   degree: "B.Tech, Information Technology",
   age: calculateAge("2003-12-22"),
   email: "abhishekpanda2003@gmail.com",
-  phone: "+91 7383699772",
+  // one-line hero pitch — the full bio lives in the About section
+  pitch:
+    "I build modern, responsive websites for small businesses and professionals.",
   bioShort:
     "As a Project Engineer at Wipro, I now work on the GenAI Engineering team, designing and building agentic AI systems — LLM-powered agents that plan, reason, and act autonomously. I started my journey here in Security Intelligence & Assurance (SIA), which shaped how I think about building resilient, trustworthy systems. My technical foundation goes back to KIIT University, where I earned my B.Tech in Information Technology.",
   bioLong:
@@ -55,11 +56,20 @@ const PROFILE = {
     "I'm always looking to engage with fellow developers, AI engineers, and tech enthusiasts working on agents and applied GenAI. Feel free to reach out!",
 };
 
+// NOTE: the WhatsApp entry was removed because a wa.me link embeds the phone
+// number in its URL. Re-add it if you're happy publishing the number.
 const SOCIALS = [
   { icon: Instagram, url: "https://www.instagram.com/a.b.h.i._22/", label: "Instagram" },
   { icon: Twitter, url: "https://x.com/abp_2203", label: "Twitter" },
   { icon: Linkedin, url: "https://www.linkedin.com/in/abhishekpanda2003/", label: "LinkedIn" },
-  { icon: MessageCircle, url: "https://wa.me/7383699772", label: "WhatsApp" },
+];
+
+// what I'm available to build — shown as chips under the hero pitch
+const SERVICES = [
+  "Business websites",
+  "Portfolio sites",
+  "Landing pages",
+  "React apps",
 ];
 
 const EDUCATION = [
@@ -74,25 +84,22 @@ const EXPERIENCE = [
   { title: "On-Site Internship", org: "DataVision Software Solution Ltd", detail: "Hands-on backend & database work." },
 ];
 
-// order matters — index 0 is graph-center-adjacent to more nodes
 const SKILLS = [
-  { name: "Java (21)", group: "Backend", level: 85 },
-  { name: "Spring Boot", group: "Backend", level: 75 },
-  { name: "Python", group: "Language", level: 80 },
-  { name: "MySQL", group: "Database", level: 90 },
-  { name: "Prompt Engineering", group: "Agentic AI", level: 75 },
+  { name: "Java (21)", group: "Backend" },
+  { name: "Spring Boot", group: "Backend" },
+  { name: "Python", group: "Language" },
+  { name: "MySQL", group: "Database" },
+  { name: "Prompt Engineering", group: "Agentic AI" },
 ];
 
 // dedicated node set for the 3D hero graph
 const GRAPH_SKILLS = ["Java 21", "Spring Boot", "Python", "MySQL", "Prompt Engineering", "AI Agents"];
 
-/* Nav items. `page: true` routes to a standalone page instead of
-   scrolling to a section on the home page — which is why Projects
-   never shows up while scrolling the home page. */
+/* Nav items — every one scrolls to a section id on this single page. */
 const NAV = [
   { id: "home", label: "Home" },
   { id: "about", label: "About" },
-  { id: ROUTES.PROJECTS, label: "Projects", page: true },
+  { id: "projects", label: "Projects" },
   { id: "skills", label: "Skills" },
   { id: "contact", label: "Contact" },
 ];
@@ -306,9 +313,7 @@ function SkillGraph() {
 }
 
 /* ---------------------------------------------------------------
-   HOME PAGE — hero, about, skills, contact.
-   Projects deliberately lives on its own route, so it is not part
-   of this scroll flow.
+   HOME PAGE — hero, about, projects, skills, contact.
 --------------------------------------------------------------- */
 function Home({ scrollTo }) {
   const [formState, setFormState] = useState({ name: "", email: "", message: "" });
@@ -368,9 +373,29 @@ function Home({ scrollTo }) {
               &gt; {PROFILE.role} @ {PROFILE.company} · {PROFILE.domain}
             </p>
             <p style={{ color: C.muted, fontSize: 15.5, lineHeight: 1.75, marginTop: 20, maxWidth: 480 }}>
-              {PROFILE.bioShort}
+              {PROFILE.pitch}
             </p>
-            <div style={{ display: "flex", gap: 14, marginTop: 34, pointerEvents: "auto", flexWrap: "wrap" }}>
+
+            {/* what I'm available to build */}
+            <div style={{ display: "flex", gap: 8, marginTop: 22, flexWrap: "wrap", maxWidth: 500 }}>
+              {SERVICES.map((s) => (
+                <span
+                  key={s}
+                  style={{
+                    fontFamily: MONO,
+                    fontSize: 11.5,
+                    color: C.teal,
+                    border: `1px solid ${C.line}`,
+                    background: "rgba(10,15,26,0.55)",
+                    padding: "5px 11px",
+                  }}
+                >
+                  {s}
+                </span>
+              ))}
+            </div>
+
+            <div style={{ display: "flex", gap: 14, marginTop: 30, pointerEvents: "auto", flexWrap: "wrap" }}>
               <a className="cv-btn" href="https://docs.google.com/document/d/1_9myuwsSmQid2T5ee56AJ8-MoUfETkP8SFX7F3TJ72s/export?format=pdf" target="_blank" rel="noreferrer noopener" download="Abhishek-Panda-Resume.pdf" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "transparent", border: `1px solid ${C.teal}`, color: C.teal, padding: "13px 22px", fontFamily: MONO, fontSize: 13.5, fontWeight: 700, cursor: "pointer", transition: "all 0.2s", textDecoration: "none" }}>
                 <Download size={15} /> Download CV
               </a>
@@ -403,7 +428,6 @@ function Home({ scrollTo }) {
                   ["role", `${PROFILE.role} @ ${PROFILE.company}`],
                   ["degree", PROFILE.degree],
                   ["email", PROFILE.email],
-                  ["phone", PROFILE.phone],
                   ["age", PROFILE.age],
                 ].map(([k, v]) => (
                   <div key={k} style={{ display: "flex", justifyContent: "space-between", gap: 16, padding: "9px 0", borderBottom: `1px solid ${C.lineSoft}`, color: C.muted }}>
@@ -474,23 +498,20 @@ function Home({ scrollTo }) {
         </div>
       </SectionShell>
 
+      {/* PROJECTS */}
+      <Projects />
+
       {/* SKILLS */}
-      <SectionShell id="skills" alt>
+      <SectionShell id="skills">
         <Reveal>
           <CommentHeader title="Skills & Stack" />
         </Reveal>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 16 }}>
           {SKILLS.map((s, i) => (
             <Reveal key={s.name} delay={i * 60}>
-              <TiltCard style={{ background: C.panel, border: `1px solid ${C.line}`, padding: "22px 22px 20px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
-                  <span style={{ fontWeight: 700, fontSize: 15.5 }}>{s.name}</span>
-                  <span style={{ fontFamily: MONO, color: C.teal, fontSize: 13 }}>{s.level}%</span>
-                </div>
-                <div style={{ color: C.mutedDim, fontSize: 12, fontFamily: MONO, marginBottom: 14 }}>{s.group}</div>
-                <div style={{ height: 6, background: C.lineSoft, position: "relative", overflow: "hidden" }}>
-                  <div style={{ position: "absolute", inset: 0, width: `${s.level}%`, background: `linear-gradient(90deg, ${C.teal}, ${C.amber})` }} />
-                </div>
+              <TiltCard style={{ background: C.panel, border: `1px solid ${C.line}`, padding: "20px 20px 18px" }}>
+                <div style={{ fontWeight: 700, fontSize: 15.5 }}>{s.name}</div>
+                <div style={{ color: C.mutedDim, fontSize: 12, fontFamily: MONO, marginTop: 6 }}>{s.group}</div>
               </TiltCard>
             </Reveal>
           ))}
@@ -498,7 +519,7 @@ function Home({ scrollTo }) {
       </SectionShell>
 
       {/* CONTACT */}
-      <SectionShell id="contact">
+      <SectionShell id="contact" alt>
         <Reveal>
           <CommentHeader title="Contact Me" />
         </Reveal>
@@ -506,15 +527,6 @@ function Home({ scrollTo }) {
         <div className="contact-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1.3fr", gap: 48, alignItems: "start" }}>
           <Reveal delay={80}>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <TiltCard style={{ background: C.panel, border: `1px solid ${C.line}`, padding: 22, display: "flex", gap: 16, alignItems: "center" }}>
-                <div style={{ width: 42, height: 42, border: `1px solid ${C.teal}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <Phone size={18} color={C.teal} />
-                </div>
-                <div>
-                  <div style={{ fontSize: 12, color: C.mutedDim, fontFamily: MONO }}>CALL US ON</div>
-                  <a href={`tel:${PROFILE.phone.replace(/\s/g, "")}`} style={{ fontSize: 15, fontWeight: 600, textDecoration: "none" }}>{PROFILE.phone}</a>
-                </div>
-              </TiltCard>
               <TiltCard style={{ background: C.panel, border: `1px solid ${C.line}`, padding: 22, display: "flex", gap: 16, alignItems: "center" }}>
                 <div style={{ width: 42, height: 42, border: `1px solid ${C.amber}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <Mail size={18} color={C.amber} />
@@ -568,62 +580,22 @@ function Home({ scrollTo }) {
 }
 
 /* ---------------------------------------------------------------
-   ROOT — global styles, header, route switch, footer
+   ROOT — global styles, header, page, footer.
+   Single page: every nav item scrolls to a section.
 --------------------------------------------------------------- */
 export default function Portfolio() {
-  const route = useHashRoute();
   const [menuOpen, setMenuOpen] = useState(false);
-
-  // when a nav item targets a home section while we're on another page,
-  // remember it and scroll once the home page has mounted
-  const pendingScroll = useRef(null);
-
-  useEffect(() => {
-    if (route !== ROUTES.HOME) {
-      window.scrollTo({ top: 0 });
-      return;
-    }
-    const id = pendingScroll.current;
-    pendingScroll.current = null;
-    if (!id) return;
-    // wait a frame so the home sections exist in the DOM
-    const raf = requestAnimationFrame(() => {
-      document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-    });
-    return () => cancelAnimationFrame(raf);
-  }, [route]);
 
   const scrollTo = (id) => {
     setMenuOpen(false);
+    // the hero already reserves header height, so send it to the very top
+    // instead of leaving a header-sized band above it
+    if (id === "home") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
-
-  const handleNav = (item) => {
-    setMenuOpen(false);
-    if (item.page) {
-      navigate(item.id);
-      return;
-    }
-    if (route !== ROUTES.HOME) {
-      pendingScroll.current = item.id;
-      navigate(ROUTES.HOME);
-      return;
-    }
-    document.getElementById(item.id)?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const goHome = () => {
-    setMenuOpen(false);
-    if (route !== ROUTES.HOME) {
-      pendingScroll.current = "home";
-      navigate(ROUTES.HOME);
-      return;
-    }
-    document.getElementById("home")?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  // only standalone pages get a persistent active state; home sections don't
-  const isActive = (item) => Boolean(item.page) && route === item.id;
 
   return (
     <div style={{ background: C.bg, color: C.text, fontFamily: SANS, minHeight: "100vh" }}>
@@ -651,11 +623,9 @@ export default function Portfolio() {
         input:focus, textarea:focus { outline: 2px solid ${C.teal}; outline-offset: 2px; }
         ::selection { background: ${C.teal}; color: ${C.bg}; }
         .nav-link:hover { color: ${C.teal} !important; }
-        .nav-link.is-active { color: ${C.teal} !important; }
         .social-btn:hover { border-color: ${C.teal} !important; color: ${C.teal} !important; transform: translateY(-2px); }
         .cv-btn:hover { background: ${C.teal} !important; color: ${C.bg} !important; }
         .submit-btn:hover { background: ${C.amber} !important; border-color: ${C.amber} !important; color: ${C.bg} !important; }
-        .back-link:hover { color: ${C.teal} !important; }
         .filter-chip:not(.is-active):hover { border-color: ${C.teal} !important; color: ${C.teal} !important; }
         .project-link:hover { border-color: ${C.teal} !important; color: ${C.teal} !important; transform: translateY(-2px); }
         @keyframes bounce {
@@ -672,14 +642,14 @@ export default function Portfolio() {
       {/* NAV */}
       <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, background: "rgba(10,15,26,0.95)", backdropFilter: "blur(10px)", borderBottom: `1px solid ${C.line}` }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <button onClick={goHome} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
+          <button onClick={() => scrollTo("home")} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ width: 8, height: 8, background: C.teal, display: "inline-block" }} />
             <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 17, color: C.text }}>abhishek<span style={{ color: C.teal }}>.dev</span></span>
           </button>
 
           <nav className="desktop-nav" style={{ display: "flex", gap: 32 }}>
             {NAV.map((item) => (
-              <button key={item.id} className={`nav-link${isActive(item) ? " is-active" : ""}`} onClick={() => handleNav(item)}
+              <button key={item.id} className="nav-link" onClick={() => scrollTo(item.id)}
                 style={{ background: "none", border: "none", cursor: "pointer", fontFamily: MONO, fontSize: 13, color: C.muted, letterSpacing: "0.03em" }}>
                 {item.label}
               </button>
@@ -693,7 +663,7 @@ export default function Portfolio() {
         {menuOpen && (
           <div style={{ borderTop: `1px solid ${C.line}`, padding: "12px 24px", display: "flex", flexDirection: "column", gap: 4 }}>
             {NAV.map((item) => (
-              <button key={item.id} className={`nav-link${isActive(item) ? " is-active" : ""}`} onClick={() => handleNav(item)} style={{ textAlign: "left", background: "none", border: "none", padding: "10px 0", color: C.muted, fontFamily: MONO, fontSize: 14, cursor: "pointer" }}>
+              <button key={item.id} className="nav-link" onClick={() => scrollTo(item.id)} style={{ textAlign: "left", background: "none", border: "none", padding: "10px 0", color: C.muted, fontFamily: MONO, fontSize: 14, cursor: "pointer" }}>
                 {item.label}
               </button>
             ))}
@@ -701,13 +671,12 @@ export default function Portfolio() {
         )}
       </header>
 
-      {/* ROUTED PAGE */}
       <ErrorBoundary fallback={<div style={{ padding: `${HEADER_H + 80}px 24px`, textAlign: "center", fontFamily: MONO, color: C.muted }}>Something went wrong loading this page.</div>}>
-        {route === ROUTES.PROJECTS ? <Projects /> : <Home scrollTo={scrollTo} />}
+        <Home scrollTo={scrollTo} />
       </ErrorBoundary>
 
-      {/* position/z-index keeps the footer above the Projects page's fixed
-          particle backdrop, while its transparent background lets it show through */}
+      {/* position/z-index keeps the footer above the fixed particle backdrop,
+          while its transparent background lets it show through */}
       <footer style={{ position: "relative", zIndex: 1, borderTop: `1px solid ${C.line}`, padding: "28px 24px", textAlign: "center", fontFamily: MONO, fontSize: 12.5, color: C.mutedDim }}>
         © {new Date().getFullYear()} Abhishek Panda — built with React &amp; three.js
       </footer>

@@ -1,10 +1,8 @@
 import { useMemo, useState } from "react";
-import { ArrowLeft, Github, ExternalLink, Star, Folder } from "lucide-react";
-import { C, MONO, HEADER_H } from "./theme";
-import { Reveal, BlueprintGrid, ErrorBoundary } from "./ui";
+import { Github, ExternalLink, Star, Folder } from "lucide-react";
+import { C, MONO } from "./theme";
+import { Reveal, SectionShell, CommentHeader } from "./ui";
 import { Card3D, CardLayer } from "./Card3D";
-import ParticleField from "./ParticleField";
-import { navigate, ROUTES } from "./useHashRoute";
 
 /* ---------------------------------------------------------------
    PROJECT DATA
@@ -28,58 +26,7 @@ import { navigate, ROUTES } from "./useHashRoute";
      featured  — true renders the card with the teal accent border
 --------------------------------------------------------------- */
 export const PROJECTS = [
-  {
-    title: "Agentic Task Orchestrator",
-    tagline: "Multi-step LLM agent with tool use and guardrails",
-    detail:
-      "An agent runtime that decomposes a goal into steps, calls tools to execute them, and validates each result before moving on. Includes retry policies and an evaluation harness for measuring task completion rates.",
-    tech: ["Python", "LLM APIs", "Prompt Engineering"],
-    group: "Agentic AI",
-    year: "2025",
-    status: "In progress",
-    repo: "",
-    demo: "",
-    featured: true,
-  },
-  {
-    title: "Spring Boot REST Platform",
-    tagline: "Production-shaped backend service template",
-    detail:
-      "A layered Spring Boot service with JWT auth, request validation, structured error handling, and a normalized MySQL schema with indexed queries and migrations.",
-    tech: ["Java 21", "Spring Boot", "MySQL"],
-    group: "Backend",
-    year: "2025",
-    status: "Live",
-    repo: "",
-    demo: "",
-    featured: false,
-  },
-  {
-    title: "Real-Time Data Pipeline",
-    tagline: "Event ingestion with integrity guarantees",
-    detail:
-      "Streaming ingestion service focused on throughput and correctness — idempotent writes, backpressure handling, and a replayable event log so no record is lost on failure.",
-    tech: ["Java 21", "MySQL", "REST"],
-    group: "Backend",
-    year: "2024",
-    status: "Archived",
-    repo: "",
-    demo: "",
-    featured: false,
-  },
-  {
-    title: "Retrieval-Augmented Q&A",
-    tagline: "Grounded answers over a private document set",
-    detail:
-      "Document chunking, embedding, and retrieval layered under an LLM so answers cite their sources. Built to compare retrieval strategies against a fixed evaluation set.",
-    tech: ["Python", "Embeddings", "Prompt Engineering"],
-    group: "Agentic AI",
-    year: "2025",
-    status: "In progress",
-    repo: "",
-    demo: "",
-    featured: false,
-  },
+  
   {
     title: "This Portfolio",
     tagline: "React + Vite site with a custom Three.js skill graph",
@@ -102,8 +49,8 @@ const STATUS_COLOR = {
 };
 
 /* ---------------------------------------------------------------
-   PROJECTS PAGE — rendered as its own route (#/projects), NOT as a
-   section of the home page, so it never appears while scrolling.
+   PROJECTS SECTION — part of the home page scroll flow, sitting
+   between About and Skills.
 --------------------------------------------------------------- */
 export default function Projects() {
   const [filter, setFilter] = useState("All");
@@ -119,105 +66,60 @@ export default function Projects() {
   );
 
   return (
-    <main style={{ paddingTop: HEADER_H, position: "relative", background: C.bg }}>
-      {/* interactive 3D constellation, behind everything on this page */}
-      <ErrorBoundary fallback={null}>
-        <ParticleField />
-      </ErrorBoundary>
+    <SectionShell id="projects" alt>
+      <Reveal>
+        <CommentHeader title="Projects" />
+      </Reveal>
 
-      {/* PAGE HEADER */}
-      <section
-        style={{
-          position: "relative",
-          zIndex: 1,
-          padding: "32px 24px 56px",
-          overflow: "hidden",
-        }}
-      >
-        <BlueprintGrid opacity={0.22} />
-        <div style={{ position: "relative", maxWidth: 1100, margin: "0 auto" }}>
-          <button
-            onClick={() => navigate(ROUTES.HOME)}
-            className="back-link"
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 8, background: "none",
-              border: "none", padding: 0, marginBottom: 26, cursor: "pointer",
-              fontFamily: MONO, fontSize: 13, color: C.mutedDim, transition: "color 0.2s",
-            }}
-          >
-            <ArrowLeft size={15} /> Back to home
-          </button>
+      <Reveal delay={60}>
+        <p
+          style={{
+            color: C.muted,
+            fontSize: 15.5,
+            lineHeight: 1.75,
+            marginTop: -14,
+            maxWidth: 620,
+          }}
+        >
+          Things I've built across backend engineering and applied GenAI — from
+          Spring Boot services and MySQL schemas to LLM agents that plan, use
+          tools, and act. Each entry links to its source where available.
+        </p>
 
-          <h1
-            style={{
-              fontFamily: MONO,
-              fontSize: "clamp(34px, 5.5vw, 54px)",
-              fontWeight: 800,
-              margin: 0,
-              letterSpacing: "-0.02em",
-              color: C.text,
-            }}
-          >
-            Projects
-          </h1>
-          <div style={{ width: 56, height: 3, background: C.teal, marginTop: 16 }} />
-          <p
-            style={{
-              color: C.muted,
-              fontSize: 15.5,
-              lineHeight: 1.75,
-              marginTop: 22,
-              maxWidth: 620,
-            }}
-          >
-            Things I've built across backend engineering and applied GenAI — from
-            Spring Boot services and MySQL schemas to LLM agents that plan, use
-            tools, and act. Each entry links to its source where available.
-          </p>
-
-          {/* FILTER CHIPS */}
-          <div style={{ display: "flex", gap: 10, marginTop: 32, flexWrap: "wrap" }}>
-            {groups.map((g) => {
-              const active = g === filter;
-              return (
-                <button
-                  key={g}
-                  onClick={() => setFilter(g)}
-                  className={`filter-chip${active ? " is-active" : ""}`}
-                  style={{
-                    background: active ? C.teal : "transparent",
-                    border: `1px solid ${active ? C.teal : C.line}`,
-                    color: active ? C.bg : C.muted,
-                    padding: "8px 16px",
-                    fontFamily: MONO,
-                    fontSize: 12.5,
-                    fontWeight: active ? 700 : 500,
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                  }}
-                >
-                  {g}
-                  <span style={{ opacity: 0.6, marginLeft: 7 }}>
-                    {g === "All" ? PROJECTS.length : PROJECTS.filter((p) => p.group === g).length}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+        {/* FILTER CHIPS */}
+        <div style={{ display: "flex", gap: 10, marginTop: 28, marginBottom: 34, flexWrap: "wrap" }}>
+          {groups.map((g) => {
+            const active = g === filter;
+            return (
+              <button
+                key={g}
+                onClick={() => setFilter(g)}
+                className={`filter-chip${active ? " is-active" : ""}`}
+                style={{
+                  background: active ? C.teal : "transparent",
+                  border: `1px solid ${active ? C.teal : C.line}`,
+                  color: active ? C.bg : C.muted,
+                  padding: "8px 16px",
+                  fontFamily: MONO,
+                  fontSize: 12.5,
+                  fontWeight: active ? 700 : 500,
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+              >
+                {g}
+                <span style={{ opacity: 0.6, marginLeft: 7 }}>
+                  {g === "All" ? PROJECTS.length : PROJECTS.filter((p) => p.group === g).length}
+                </span>
+              </button>
+            );
+          })}
         </div>
-      </section>
+      </Reveal>
 
-      {/* PROJECT GRID */}
-      <section
-        style={{
-          position: "relative",
-          zIndex: 1,
-          padding: "10px 24px 110px",
-          overflow: "hidden",
-        }}
-      >
-        <div style={{ position: "relative", maxWidth: 1100, margin: "0 auto" }}>
+      <div>
           <div
+            className="projects-grid"
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
@@ -331,8 +233,7 @@ export default function Projects() {
               No projects in this category yet.
             </p>
           )}
-        </div>
-      </section>
-    </main>
+      </div>
+    </SectionShell>
   );
 }

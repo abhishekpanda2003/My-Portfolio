@@ -147,7 +147,10 @@ export function SectionShell({ id, children, alt, style }) {
         // z-index keeps section content above the fixed particle backdrop;
         // backgrounds are see-through so the constellation shows behind them
         zIndex: 1,
-        padding: "110px 24px",
+        // Asymmetric on purpose: the small top pad is what you see right under
+        // the fixed header after clicking a nav link, so it stays tight; the
+        // large bottom pad keeps sections apart while free-scrolling.
+        padding: "44px 24px 96px",
         background: alt ? "rgba(12, 20, 32, 0.72)" : "transparent",
         borderTop: `1px solid ${C.line}`,
         overflow: "hidden",

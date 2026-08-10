@@ -11,8 +11,11 @@ export const C = {
   teal: "#4FD1C5",
   amber: "#F2B705",
   text: "#E7EDF5",
-  muted: "#8B9AB3",
-  mutedDim: "#5C6B84",
+  // Same blue-grey hue family, brightened for readability against the dark bg.
+  // The old values (#8B9AB3 / #5C6B84) sat near or below 4.5:1 contrast and
+  // read as washed out, especially on phone screens.
+  muted: "#AAB8CE",
+  mutedDim: "#8A9BB6",
 };
 
 export const MONO = "'JetBrains Mono', monospace";
