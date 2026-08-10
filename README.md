@@ -8,18 +8,22 @@ No CSS framework, no router, no state library — the only runtime dependencies 
 
 ## Scripts
 
-| Command           | What it does                          |
-| ----------------- | ------------------------------------- |
-| `npm install`     | install dependencies                  |
-| `npm run dev`     | start the local development server    |
-| `npm run build`   | build production assets into `dist/`  |
-| `npm run preview` | preview the production build locally  |
+| Command           | What it does                                     |
+| ----------------- | ------------------------------------------------ |
+| `npm install`     | install dependencies                             |
+| `npm run dev`     | start the local development server               |
+| `npm run build`   | build production assets into `dist/`             |
+| `npm run preview` | preview the production build locally             |
+| `npm run brand`   | regenerate favicon + social card from `logo.png` |
 
 ## Project structure
 
 ```
 index.html              application shell, favicon + social preview meta
-public/logo.png         logo lockup — the only brand asset needed
+public/logo.png         source logo lockup — the only file you maintain
+public/favicon.png      generated: monogram tab icon
+public/og-image.png     generated: link-preview card
+scripts/make-brand-assets.cjs  regenerates the two files above
 src/main.jsx            React entry point
 src/App.jsx             content data, hero skill graph, all page sections, header/footer
 src/Projects.jsx        Projects section — project data + filterable card grid
@@ -68,55 +72,65 @@ All copy is plain data — no markup editing required.
 
 ## Brand assets
 
-A single file — `public/logo.png`, the full lockup (monogram above the name).
-It is referenced through `import.meta.env.BASE_URL` so it resolves from a root
-domain and from a subdirectory alike, and it serves three roles:
+**You maintain one file: `public/logo.png`** — the full lockup (monogram above
+the name), a transparent RGBA PNG. Everything else is derived from it.
 
-| Where   | How it's used                                              |
-| ------- | ---------------------------------------------------------- |
-| Header  | cropped to just the monogram, 28px                          |
-| Footer  | full lockup, 108px wide                                     |
-| Browser | favicon, apple-touch-icon, and link-preview image           |
+| Asset                 | Origin     | Used for                                    |
+| --------------------- | ---------- | ------------------------------------------- |
+| `public/logo.png`     | you        | header monogram (cropped), footer lockup    |
+| `public/favicon.png`  | generated  | browser tab icon, apple-touch-icon          |
+| `public/og-image.png` | generated  | link previews on Slack, WhatsApp, LinkedIn  |
 
-### Recolouring (no light-coloured export needed)
+### Replacing the logo
 
-The artwork is dark navy on white; the site background is dark navy, so as-is it
-would be invisible. The `.brand-mark` rule in `App.jsx` fixes that in CSS:
-
-```css
-filter: invert(1) grayscale(1) brightness(1.45) contrast(1.1);
-mix-blend-mode: screen;
+```bash
+# 1. overwrite public/logo.png
+npm run brand      # 2. regenerate favicon.png + og-image.png
 ```
 
-`invert` turns the navy artwork pale and the white plate black; `grayscale` and
-`brightness` push the artwork to near-white; and because black is the identity
-colour for **screen** blending, the inverted plate blends away to nothing — so
-the white background disappears without needing a transparent PNG. The same rule
-also works correctly on a transparent export.
+`npm run brand` also prints the correct `MARK_CROP` values — paste them into
+`src/App.jsx` if the new logo places the monogram differently.
 
-If you ever supply an already-light version of the logo, delete the whole rule.
+`scripts/make-brand-assets.cjs` decodes and re-encodes PNGs with Node's built-in
+`zlib` rather than pulling in `sharp` or `jimp`, keeping the project free of
+native dependencies. It measures the logo's horizontal bands of ink to locate
+the monogram automatically, so it adapts to a re-exported logo with different
+padding. If the artwork ever gains gradients or multiple colours, replace it
+with a real image library rather than extending it.
 
-### Cropping the header monogram
+### Why the derived assets exist
 
-At 28px the "ABHISHEK PANDA" lettering is illegible, so the header shows only
-the monogram — scaled up behind a small square window rather than requiring a
-second exported file. `MARK_CROP` in `src/App.jsx` describes where the monogram
-sits inside the image, as fractions of its width and height:
+At 16px the "ABHISHEK PANDA" lettering in the full lockup is an illegible
+smudge, so the favicon is the **monogram alone**, teal on a transparent
+background so it sits directly on the browser's own tab colour. Teal is the one
+palette colour legible against both light and dark chrome — the navy of the
+source artwork disappears on dark, and the near-white would disappear on light.
 
-```js
-const MARK_CROP = { x: 0.33, y: 0.25, w: 0.34, h: 0.29 };
-```
+`og-image.png` deliberately keeps its navy background: platforms flatten
+transparent preview images onto white or black, which would wreck a light-ink
+lockup. It's a proper 1200×630 card at the ratio scrapers expect, rather than a
+square logo they would letterbox.
 
-**These values are estimated from the current logo file.** If the header mark
-looks off-centre or clipped, nudge them — they are the only numbers tied to how
-the logo is composed, and nothing else needs to change.
+### Header crop and recolouring
 
-A missing file degrades gracefully: the header falls back to a plain teal square
-and the footer logo hides itself, rather than showing broken-image icons.
+The header shows only the monogram, scaled up behind a small square window.
+`MARK_CROP` in `src/App.jsx` says where it sits inside the source image, as
+fractions of width and height — measured from the file, not estimated.
 
-For link previews, `og:image` in `index.html` should become an **absolute** URL
-(e.g. `https://your-domain.com/logo.png`) once the domain is settled — most
-scrapers won't resolve a relative path.
+The artwork is dark navy and so is the background, so `.brand-mark` applies
+`filter: brightness(0) invert(1)`: `brightness(0)` flattens every colour to
+black and `invert(1)` flips it to white, recolouring a monochrome mark whatever
+its source colour. The PNG is transparent, so only the artwork is affected.
+Delete that rule if you ever supply an already-light logo.
+
+A missing file degrades gracefully — the header falls back to a plain teal
+square and the footer logo hides itself, rather than showing broken-image icons.
+
+### Before going live
+
+Make `og:image` and `twitter:image` in `index.html` **absolute** URLs
+(`https://your-domain.com/og-image.png`). Most scrapers won't resolve the
+relative paths currently there.
 
 ## The 3D pieces
 

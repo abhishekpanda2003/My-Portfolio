@@ -11,30 +11,35 @@
     />
 
     <!-- Brand assets live in public/ and are copied to the build root.
-         Vite rewrites these paths for the configured base, so they work
-         from a root domain and from a subdirectory alike. -->
-    <link rel="icon" type="image/png" href="/logo.png" />
-    <link rel="apple-touch-icon" href="/logo.png" />
+         favicon.png and og-image.png are GENERATED from logo.png —
+         run `npm run brand` after replacing it. -->
+
+    <!-- The tab icon is the monogram only: the full lockup's lettering is
+         an illegible smudge at 16px. It carries its own navy plate so it
+         stays visible against both light and dark browser chrome. -->
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
     <!-- matches C.bg in src/theme.js — tints mobile browser chrome -->
     <meta name="theme-color" content="#0A0F1A" />
 
     <!-- Link previews (Slack, WhatsApp, LinkedIn, X).
-         og:image should be an ABSOLUTE url once the domain is settled —
-         most scrapers will not resolve a relative one. -->
+         TODO: make og:image and twitter:image ABSOLUTE urls once the domain
+         is final (https://your-domain.com/og-image.png) — most scrapers will
+         not resolve a relative path. -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Abhishek Panda — Portfolio" />
     <meta
       property="og:description"
       content="I build modern, responsive websites for small businesses and professionals."
     />
-    <meta property="og:image" content="/logo.png" />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content="/og-image.png" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Abhishek Panda — Portfolio" />
     <meta
       name="twitter:description"
       content="I build modern, responsive websites for small businesses and professionals."
     />
-    <meta name="twitter:image" content="/logo.png" />
+    <meta name="twitter:image" content="/og-image.png" />
   </head>
   <body>
     <div id="root"></div>

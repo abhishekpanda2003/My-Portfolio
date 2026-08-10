@@ -140,12 +140,11 @@ const LOGO_FULL = `${import.meta.env.BASE_URL}logo.png`;
  * Where the monogram sits inside logo.png, as fractions of the image's
  * width/height from its top-left corner.
  *
- * These are the only numbers tied to how the logo file is composed. If the
- * header mark looks off-centre or clipped, nudge them here — nothing else
- * needs to change. Re-export the logo with different padding and these are
- * what you update.
+ * Measured from the actual file, not estimated — `npm run brand` prints the
+ * correct values for whatever logo.png currently contains. Re-run it and paste
+ * the result here if you replace the logo.
  */
-const MARK_CROP = { x: 0.33, y: 0.25, w: 0.34, h: 0.29 };
+const MARK_CROP = { x: 0.3365, y: 0.2572, w: 0.3276, h: 0.2758 };
 
 /**
  * Header monogram: the lockup scaled up behind a small square window so only
@@ -795,23 +794,13 @@ export default function Portfolio() {
           60% { transform: translateY(-4px); }
         }
         .bounce { animation: bounce 2s infinite; }
-        /* Recolour the logo to read on the dark background, without needing a
-           separate light-coloured export. Step by step:
-             invert(1)     dark navy artwork -> pale cream;
-                           the white plate around it -> black
-             grayscale(1)  drops the cream tint, leaving neutral grey
-             brightness()  pushes that grey up to effectively white
-             screen blend  black is the identity colour for screen blending,
-                           so the inverted white plate blends away to nothing
-                           and the page shows through — no white box, and no
-                           need for a transparent PNG
-           This works on a transparent export too: transparent pixels stay
-           transparent through the filter, and screen leaves them untouched.
-           If you ever supply an already-light logo, delete this whole rule. */
-        .brand-mark {
-          filter: invert(1) grayscale(1) brightness(1.45) contrast(1.1);
-          mix-blend-mode: screen;
-        }
+        /* The logo artwork is dark navy, invisible against this background.
+           brightness(0) flattens every colour to black, invert(1) flips that
+           to white — recolouring a monochrome mark in one step whatever its
+           source colour. logo.png is transparent, so only the artwork is
+           affected; there is no plate to deal with.
+           Delete this rule if you ever supply an already-light logo. */
+        .brand-mark { filter: brightness(0) invert(1); }
         /* Keep the sphere clear of the hero copy: beside it on wide screens,
            and dimmed to a backdrop once the text spans the full width. */
         .skill-graph { left: 42%; }
