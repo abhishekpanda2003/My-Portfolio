@@ -25,7 +25,7 @@ import { Card3D, CardLayer } from "./Card3D";
      demo      — live demo URL, or "" to hide the button
      featured  — true renders the card with the teal accent border
 --------------------------------------------------------------- */
-export const PROJECTS = [
+const PROJECTS = [
   
   {
     title: "This Portfolio",
@@ -66,7 +66,7 @@ export default function Projects() {
   );
 
   return (
-    <SectionShell id="projects" alt>
+    <SectionShell id="projects">
       <Reveal>
         <CommentHeader title="Projects" />
       </Reveal>
@@ -117,123 +117,125 @@ export default function Projects() {
         </div>
       </Reveal>
 
-      <div>
-          <div
-            className="projects-grid"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-              gap: 18,
-            }}
-          >
-            {visible.map((p, i) => (
-              <Reveal key={p.title} delay={(i % 3) * 70}>
-                <Card3D
-                  style={{
-                    background: C.panel,
-                    border: `1px solid ${p.featured ? C.teal : C.line}`,
-                    padding: 24,
-                    display: "flex",
-                    flexDirection: "column",
-                  }}
-                >
-                  {/* card top row */}
-                  <CardLayer depth={18} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-                    <Folder size={17} color={p.featured ? C.teal : C.mutedDim} />
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      {p.featured && (
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontFamily: MONO, fontSize: 10.5, fontWeight: 700, color: C.teal }}>
-                          <Star size={11} /> FEATURED
-                        </span>
-                      )}
-                      <span style={{ fontFamily: MONO, fontSize: 11.5, color: C.mutedDim }}>{p.year}</span>
-                    </div>
-                  </CardLayer>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+          gap: 18,
+        }}
+      >
+        {visible.map((p, i) => (
+          <Reveal key={p.title} delay={(i % 3) * 70}>
+            <Card3D
+              style={{
+                background: C.panel,
+                border: `1px solid ${p.featured ? C.teal : C.line}`,
+                padding: 24,
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              {/* Each CardLayer floats at its own translateZ depth on hover —
+                  higher `depth` sits further forward. See Card3D.jsx. */}
+              <CardLayer depth={18} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                <Folder size={17} color={p.featured ? C.teal : C.mutedDim} />
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  {p.featured && (
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontFamily: MONO, fontSize: 10.5, fontWeight: 700, color: C.teal }}>
+                      <Star size={11} /> FEATURED
+                    </span>
+                  )}
+                  <span style={{ fontFamily: MONO, fontSize: 11.5, color: C.mutedDim }}>{p.year}</span>
+                </div>
+              </CardLayer>
 
-                  <CardLayer depth={38}>
-                    <h3 style={{ fontSize: 17, fontWeight: 700, margin: "16px 0 0", color: C.text }}>
-                      {p.title}
-                    </h3>
-                  </CardLayer>
+              <CardLayer depth={38}>
+                <h3 style={{ fontSize: 17, fontWeight: 700, margin: "16px 0 0", color: C.text }}>
+                  {p.title}
+                </h3>
+              </CardLayer>
 
-                  <CardLayer depth={30}>
-                    <div style={{ fontFamily: MONO, fontSize: 12.5, color: C.amber, marginTop: 6 }}>
-                      {p.tagline}
-                    </div>
-                  </CardLayer>
+              <CardLayer depth={30}>
+                <div style={{ fontFamily: MONO, fontSize: 12.5, color: C.amber, marginTop: 6 }}>
+                  {p.tagline}
+                </div>
+              </CardLayer>
 
-                  <CardLayer depth={16} style={{ flexGrow: 1 }}>
-                    <p style={{ color: C.mutedDim, fontSize: 13.5, lineHeight: 1.65, margin: "14px 0 0" }}>
-                      {p.detail}
-                    </p>
-                  </CardLayer>
+              {/* flexGrow pushes the tags and footer to the bottom, so cards
+                  in a row line up regardless of description length */}
+              <CardLayer depth={16} style={{ flexGrow: 1 }}>
+                <p style={{ color: C.mutedDim, fontSize: 13.5, lineHeight: 1.65, margin: "14px 0 0" }}>
+                  {p.detail}
+                </p>
+              </CardLayer>
 
-                  {/* tech tags */}
-                  <CardLayer depth={24} style={{ display: "flex", gap: 7, flexWrap: "wrap", marginTop: 18 }}>
-                    {p.tech.map((t) => (
-                      <span
-                        key={t}
-                        style={{
-                          fontFamily: MONO,
-                          fontSize: 11,
-                          color: C.muted,
-                          border: `1px solid ${C.lineSoft}`,
-                          background: C.panelAlt,
-                          padding: "3px 9px",
-                        }}
-                      >
-                        {t}
-                      </span>
-                    ))}
-                  </CardLayer>
-
-                  {/* footer: status + links */}
-                  <CardLayer
-                    depth={12}
+              <CardLayer depth={24} style={{ display: "flex", gap: 7, flexWrap: "wrap", marginTop: 18 }}>
+                {p.tech.map((t) => (
+                  <span
+                    key={t}
                     style={{
-                      display: "flex", alignItems: "center", justifyContent: "space-between",
-                      gap: 12, marginTop: 20, paddingTop: 16, borderTop: `1px solid ${C.lineSoft}`,
+                      fontFamily: MONO,
+                      fontSize: 11,
+                      color: C.muted,
+                      border: `1px solid ${C.lineSoft}`,
+                      background: C.panelAlt,
+                      padding: "3px 9px",
                     }}
                   >
-                    {p.status ? (
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: MONO, fontSize: 11.5, color: STATUS_COLOR[p.status] ?? C.mutedDim }}>
-                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: STATUS_COLOR[p.status] ?? C.mutedDim, display: "inline-block" }} />
-                        {p.status}
-                      </span>
-                    ) : <span />}
+                    {t}
+                  </span>
+                ))}
+              </CardLayer>
 
-                    <div style={{ display: "flex", gap: 8 }}>
-                      {p.repo && (
-                        <a
-                          href={p.repo} target="_blank" rel="noopener noreferrer" className="project-link"
-                          aria-label={`${p.title} source code on GitHub`}
-                          style={{ width: 32, height: 32, border: `1px solid ${C.line}`, display: "flex", alignItems: "center", justifyContent: "center", color: C.muted, transition: "all 0.2s" }}
-                        >
-                          <Github size={15} />
-                        </a>
-                      )}
-                      {p.demo && (
-                        <a
-                          href={p.demo} target="_blank" rel="noopener noreferrer" className="project-link"
-                          aria-label={`${p.title} live demo`}
-                          style={{ width: 32, height: 32, border: `1px solid ${C.line}`, display: "flex", alignItems: "center", justifyContent: "center", color: C.muted, transition: "all 0.2s" }}
-                        >
-                          <ExternalLink size={15} />
-                        </a>
-                      )}
-                    </div>
-                  </CardLayer>
-                </Card3D>
-              </Reveal>
-            ))}
-          </div>
+              {/* status dot on the left, repo/demo links on the right */}
+              <CardLayer
+                depth={12}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  gap: 12, marginTop: 20, paddingTop: 16, borderTop: `1px solid ${C.lineSoft}`,
+                }}
+              >
+                {p.status ? (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: MONO, fontSize: 11.5, color: STATUS_COLOR[p.status] ?? C.mutedDim }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: STATUS_COLOR[p.status] ?? C.mutedDim, display: "inline-block" }} />
+                    {p.status}
+                  </span>
+                ) : (
+                  // empty span keeps the links flush right when there's no status
+                  <span />
+                )}
 
-          {visible.length === 0 && (
-            <p style={{ fontFamily: MONO, fontSize: 13.5, color: C.mutedDim, textAlign: "center", padding: "60px 0" }}>
-              No projects in this category yet.
-            </p>
-          )}
+                <div style={{ display: "flex", gap: 8 }}>
+                  {p.repo && (
+                    <a
+                      href={p.repo} target="_blank" rel="noopener noreferrer" className="project-link"
+                      aria-label={`${p.title} source code on GitHub`}
+                      style={{ width: 32, height: 32, border: `1px solid ${C.line}`, display: "flex", alignItems: "center", justifyContent: "center", color: C.muted, transition: "all 0.2s" }}
+                    >
+                      <Github size={15} />
+                    </a>
+                  )}
+                  {p.demo && (
+                    <a
+                      href={p.demo} target="_blank" rel="noopener noreferrer" className="project-link"
+                      aria-label={`${p.title} live demo`}
+                      style={{ width: 32, height: 32, border: `1px solid ${C.line}`, display: "flex", alignItems: "center", justifyContent: "center", color: C.muted, transition: "all 0.2s" }}
+                    >
+                      <ExternalLink size={15} />
+                    </a>
+                  )}
+                </div>
+              </CardLayer>
+            </Card3D>
+          </Reveal>
+        ))}
       </div>
+
+      {visible.length === 0 && (
+        <p style={{ fontFamily: MONO, fontSize: 13.5, color: C.mutedDim, textAlign: "center", padding: "60px 0" }}>
+          No projects in this category yet.
+        </p>
+      )}
     </SectionShell>
   );
 }

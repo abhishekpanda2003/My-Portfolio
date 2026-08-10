@@ -23,9 +23,14 @@ export class ErrorBoundary extends Component {
 }
 
 /* ---------------------------------------------------------------
-   TILT CARD — cheap CSS-based 3D hover, used on skill/project cards
+   TILT CARD — lightweight CSS 3D hover for the experience, skill and
+   contact cards. Writes the transform straight to the node so moving
+   the pointer never re-renders React.
+
+   The richer effect on project cards (glow, parallax layers) lives in
+   Card3D.jsx; this is the cheap version for cards that only need a tilt.
 --------------------------------------------------------------- */
-export function TiltCard({ children, style, className }) {
+export function TiltCard({ children, style }) {
   const ref = useRef(null);
   const onMove = (e) => {
     const el = ref.current;
@@ -41,7 +46,6 @@ export function TiltCard({ children, style, className }) {
   return (
     <div
       ref={ref}
-      className={className}
       onMouseMove={onMove}
       onMouseLeave={onLeave}
       style={{ transition: "transform 0.15s ease-out", willChange: "transform", ...style }}
@@ -110,8 +114,10 @@ export function Reveal({ children, delay = 0 }) {
 }
 
 /* ---------------------------------------------------------------
-    SMALL BITS
+   SECTION CHROME
 --------------------------------------------------------------- */
+
+/** Section heading: the title plus its short teal underline. */
 export function CommentHeader({ title }) {
   return (
     <div style={{ marginBottom: 40 }}>
@@ -123,12 +129,16 @@ export function CommentHeader({ title }) {
   );
 }
 
-/** Blueprint grid backdrop — shared by every section on both pages. */
-export function BlueprintGrid({ opacity = 0.5 }) {
+/**
+ * Faint graph-paper backdrop behind each section, masked to an ellipse so it
+ * fades out at the edges rather than ending on a hard line. Internal to
+ * SectionShell — nothing else needs it directly.
+ */
+function BlueprintGrid() {
   return (
     <div
       style={{
-        position: "absolute", inset: 0, opacity, pointerEvents: "none",
+        position: "absolute", inset: 0, opacity: 0.5, pointerEvents: "none",
         backgroundImage: `linear-gradient(${C.lineSoft} 1px, transparent 1px), linear-gradient(90deg, ${C.lineSoft} 1px, transparent 1px)`,
         backgroundSize: "48px 48px",
         WebkitMaskImage: "radial-gradient(ellipse at center, black 0%, transparent 75%)",
@@ -138,20 +148,25 @@ export function BlueprintGrid({ opacity = 0.5 }) {
   );
 }
 
-export function SectionShell({ id, children, alt, style }) {
+/**
+ * Wrapper every page section uses: the blueprint backdrop, consistent padding,
+ * a max-width content column, and the `id` the nav scrolls to.
+ */
+export function SectionShell({ id, children, style }) {
   return (
     <section
       id={id}
       style={{
         position: "relative",
         // z-index keeps section content above the fixed particle backdrop;
-        // backgrounds are see-through so the constellation shows behind them
+        // every section is transparent so the constellation reads identically
+        // from top to bottom — only the 1px border separates them
         zIndex: 1,
         // Asymmetric on purpose: the small top pad is what you see right under
         // the fixed header after clicking a nav link, so it stays tight; the
         // large bottom pad keeps sections apart while free-scrolling.
         padding: "44px 24px 96px",
-        background: alt ? "rgba(12, 20, 32, 0.72)" : "transparent",
+        background: "transparent",
         borderTop: `1px solid ${C.line}`,
         overflow: "hidden",
         ...style,

@@ -1,113 +1,134 @@
 # Portfolio App
 
-A React + Vite personal portfolio website built with a custom 3D skill graph using Three.js.
+A single-page personal portfolio built with React + Vite, featuring a custom
+Three.js skill graph, an interactive particle background, and pointer-driven 3D cards.
+
+No CSS framework, no router, no state library — the only runtime dependencies are
+`react`, `react-dom`, `three`, and `lucide-react`.
+
+## Scripts
+
+| Command           | What it does                          |
+| ----------------- | ------------------------------------- |
+| `npm install`     | install dependencies                  |
+| `npm run dev`     | start the local development server    |
+| `npm run build`   | build production assets into `dist/`  |
+| `npm run preview` | preview the production build locally  |
 
 ## Project structure
 
 ```
-index.html            application shell
-src/main.jsx          React application entry point
-src/App.jsx           global styles, header/footer, and the page itself
-src/Projects.jsx      Projects section — project data + filterable card grid
-src/Card3D.jsx        pointer-driven 3D card: tilt, cursor glow, parallax layers
-src/ParticleField.jsx interactive 3D constellation background
-src/ui.jsx            shared UI primitives (ErrorBoundary, TiltCard, Reveal, SectionShell…)
-src/theme.js          palette, fonts, and layout tokens shared across the site
-vite.config.js        Vite configuration
-package.json          dependencies and scripts
+index.html              application shell
+src/main.jsx            React entry point
+src/App.jsx             content data, hero skill graph, all page sections, header/footer
+src/Projects.jsx        Projects section — project data + filterable card grid
+src/theme.js            design tokens: palette, fonts, layout constants
+src/ui.jsx              shared primitives: ErrorBoundary, TiltCard, Reveal, SectionShell
+src/Card3D.jsx          project-card 3D effect: tilt, cursor glow, parallax layers
+src/ParticleField.jsx   fixed constellation background (Three.js)
+src/Wireframe3D.jsx     rotating torus-knot wireframe beside the education timeline
+vite.config.js          Vite configuration
 ```
 
-## Scripts
-
-- `npm install` — install dependencies
-- `npm run dev` — start the local development server
-- `npm run build` — build production assets
-- `npm run preview` — preview the production build locally
+`App.jsx` is organised into four numbered blocks — content data, the skill graph,
+the page sections, and the root shell — with a map of them in the file header.
 
 ## Page structure
 
-The site is a single scrolling page. Sections, in order:
+One scrolling page. Every nav item scrolls to a section `id`; there is no router.
 
-| Section    | Source                            |
-| ---------- | --------------------------------- |
-| `home`     | hero + 3D skill graph, `App.jsx`  |
-| `about`    | bio, education, experience        |
-| `projects` | `src/Projects.jsx`                |
-| `skills`   | skill bars                        |
-| `contact`  | contact cards + Formspree form    |
+| Section    | Lives in                             |
+| ---------- | ------------------------------------ |
+| `home`     | hero + 3D skill graph, `App.jsx`     |
+| `about`    | bio, education timeline, experience  |
+| `projects` | `src/Projects.jsx`                   |
+| `skills`   | skill cards                          |
+| `contact`  | contact card + Formspree form        |
 
-Every nav item scrolls to a section `id`; there is no router. To add one, add an entry
-to the `NAV` array in `src/App.jsx` whose `id` matches a section's `id`, and give that
-section a `SectionShell id="…"`.
+To add a section: give it a `<SectionShell id="…">` and add a matching entry to
+the `NAV` array in `App.jsx`.
 
 ## Editing content
 
-All content is plain data at the top of its file — no markup editing required.
+All copy is plain data — no markup editing required.
 
-- **Bio, education, experience, skills, socials** — the `PROFILE`, `EDUCATION`,
-  `EXPERIENCE`, `SKILLS`, and `SOCIALS` constants in `src/App.jsx`.
-- **Projects** — the `PROJECTS` array in `src/Projects.jsx`. Each entry accepts
-  `title`, `tagline`, `detail`, `tech[]`, `group`, `year`, `status`, `repo`, `demo`,
-  and `featured`. The filter chips above the grid are generated from `group`, so adding
-  a new group needs no other change. Leave `repo` or `demo` as `""` to hide that button.
-- **Colors and fonts** — the `C` token object in `src/theme.js` restyles the whole site.
+- **Bio, education, experience, skills, socials, services** — the `PROFILE`,
+  `EDUCATION`, `EXPERIENCE`, `SKILLS`, `SOCIALS`, and `SERVICES` constants at the
+  top of `src/App.jsx`.
+- **Projects** — the `PROJECTS` array in `src/Projects.jsx`. Each entry takes
+  `title`, `tagline`, `detail`, `tech[]`, `group`, `year`, `status`, `repo`,
+  `demo`, and `featured`. The filter chips are generated from `group`, so adding
+  a new group needs no other change; leave `repo` or `demo` as `""` to hide that
+  button.
+- **Colours and fonts** — the tokens in `src/theme.js` restyle the whole site.
 
-## The 3D project cards
+> The entries in `PROJECTS` are placeholder scaffolding built around the site's
+> tech stack, not descriptions of shipped work. Replace them before publishing.
 
-Project cards use `Card3D` from `src/Card3D.jsx`, which layers four pointer-driven
-effects: the card tilts toward the cursor, a teal pool of light and a white specular
-sheen follow it, a 1px border ring lights up nearest to it, and the card's contents sit
-at different `translateZ` depths so the title floats above the background as it tilts.
+## The 3D pieces
 
-Depth is set per layer with `<CardLayer depth={38}>` — higher values float further
-forward on hover. Tilt strength is the `maxTilt` prop on `Card3D` (default `14` degrees).
+Three separate effects, each isolated in its own file.
 
-The effect is driven entirely by CSS custom properties written to the DOM inside a
-`requestAnimationFrame`, so pointer movement never triggers a React re-render. It is
-disabled automatically on touch devices (`@media (hover: none)`) and for visitors who
-prefer reduced motion.
+**`Card3D.jsx`** — project cards tilt toward the cursor while a teal glow, a white
+specular sheen, and a lit border ring follow it. Card contents sit at different
+`translateZ` depths (`<CardLayer depth={38}>`) so the title floats above the
+background as it tilts. Driven entirely by CSS custom properties written inside a
+`requestAnimationFrame`, so pointer movement never re-renders React.
 
-> The entries currently in `PROJECTS` are placeholder scaffolding built around the
-> site's tech stack, not descriptions of shipped work. Replace them before publishing.
+**`ParticleField.jsx`** — a drifting cloud of points where any two closer than a
+threshold are joined by a line, brightest when nearest, so the mesh continuously
+forms and dissolves. It parallaxes toward the cursor and pushes points away from
+it. Tuning constants sit at the top of the file: `COUNT` (pair checks are O(n²),
+so raise it carefully), `MAX_LINES`, `CAMERA_Z`, `FOV`.
 
-## The constellation background
+It takes a `holeRef` pointing at the hero's skill-graph canvas. A radial mask
+punches a clear circle around that element so particles surround the sphere
+rather than showing through it, and the hole tracks the canvas's on-screen
+position as you scroll.
 
-`src/ParticleField.jsx` renders an interactive Three.js constellation behind the whole
-page: a drifting cloud of points where any two closer than a threshold are joined by a
-line, brightest when nearest — so the mesh continuously forms and dissolves. The field
-parallaxes toward the cursor and points are pushed away from it.
+**`Wireframe3D.jsx`** — a rotating torus knot filling the column beside the
+education timeline. Deliberately a **2D canvas**, not Three.js: the page already
+runs two WebGL contexts, and a few hundred hand-projected line segments cost far
+less than a third. `height` sizes it; `P`/`Q` at the top of the file change the
+knot shape.
 
-It is `position: fixed`, so it stays locked to the viewport for the whole scroll,
-including behind the footer. Sections paint above it at `z-index: 1` with see-through
-backgrounds so the field shows through.
+### Constraints worth knowing
 
-It takes a `holeRef` pointing at the hero. A radial mask punches a clear circle around
-that element so the particles surround the 3D skill graph instead of showing through
-it, and the hole tracks the hero's on-screen position as you scroll, travelling
-off-screen naturally once you pass it. Omit `holeRef` for an unmasked field.
+- `ParticleField` is `position: fixed`. **No ancestor may set `transform`,
+  `filter`, `perspective`, `contain`, or `will-change`** — any of those re-anchor
+  a fixed element to that ancestor and the background stops tracking the viewport.
+- Sections paint above the background at `z-index: 1` with transparent
+  backgrounds, so the field reads identically from top to bottom.
+- Every effect degrades: all are disabled or frozen under
+  `prefers-reduced-motion`, `Card3D` switches off where there's no hover
+  (`@media (hover: none)`), and the WebGL pieces are wrapped in `ErrorBoundary`
+  so a missing WebGL context can't blank the page.
+- The WebGL and canvas loops pause when the tab is hidden; `Wireframe3D` also
+  pauses when scrolled out of view.
 
-> The fixed positioning depends on no ancestor setting `transform`, `filter`,
-> `perspective`, `contain`, or `will-change` — any of those re-anchor a fixed element
-> to that ancestor and the background will stop tracking the viewport.
+## Layout notes
 
-Tuning constants live at the top of the file: `COUNT` (particles — pair checks are
-O(n²), so raise it carefully), `MAX_LINES`, `CAMERA_Z`, and `FOV`.
-
-It is deliberately cheap: the line buffer is allocated once at max size and only its
-used span is rewritten each frame, the loop pauses when the tab is hidden, and the
-canvas is `pointer-events: none` with pointer tracking on `window`, so it never
-intercepts clicks. Under `prefers-reduced-motion` it renders a single static frame,
-and if WebGL is unavailable the page renders normally without it.
-
-## Notes
-
-- The Vite base path is `./` by default for compatibility with root and subdirectory deployments.
-- Contact form submissions use Formspree; the endpoint lives in `FORMSPREE_ENDPOINT` in `src/App.jsx`.
-- The production bundle triggers a Vite "chunk larger than 500 kB" advisory. It is
-  informational only — the size comes from `three`, and the build and deployment succeed.
+- **Header offset.** `HEADER_H` in `theme.js` is only an estimate. `Portfolio()`
+  measures the real header on mount and publishes it as the `--header-h` CSS
+  variable, which `scroll-margin-top` uses so a nav click parks each section's
+  top border flush against the header.
+- **Scroll reveals.** `Reveal` in `ui.jsx` animates on the way *down* only. It
+  reveals at 15% visibility but re-arms only once an element is completely below
+  the viewport, so scrolling up never replays the fade.
+- **The hero graph** sits in the right-hand column on desktop (`.skill-graph
+  { left: 42% }`) to keep clear of the copy, and dims to a backdrop below 900px
+  where the text spans the full width.
 
 ## Deployment
 
-This app can be deployed to Vercel, GitHub Pages, or any static hosting provider.
+Deploys as a static bundle to Vercel, GitHub Pages, or any static host.
 
-For GitHub Pages, set `VITE_BASE=/My-Portfolio/` before building if the app is served from a subpath.
+The Vite `base` is `./` by default, which works from both a root domain and a
+subdirectory. For GitHub Pages served from a subpath, build with
+`VITE_BASE=/My-Portfolio/`.
+
+Contact form submissions go through Formspree; the endpoint is
+`FORMSPREE_ENDPOINT` in `src/App.jsx`.
+
+> The production build prints a Vite "chunk larger than 500 kB" advisory. It is
+> informational only — the size is `three`, and the build and deploy succeed.

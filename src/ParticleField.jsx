@@ -58,10 +58,21 @@ export default function ParticleField({ holeRef = null }) {
     };
 
     update();
+    // the target may not be laid out on the first pass; re-measure next frame
+    onScroll();
+
+    // the hole element resizes on its own when a media query changes its width
+    const ro =
+      typeof ResizeObserver !== "undefined" && holeRef.current
+        ? new ResizeObserver(onScroll)
+        : null;
+    ro?.observe(holeRef.current);
+
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     return () => {
       cancelAnimationFrame(raf);
+      ro?.disconnect();
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };

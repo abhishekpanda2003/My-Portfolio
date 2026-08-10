@@ -128,9 +128,9 @@ export const CARD3D_CSS = `
  * A content layer inside a Card3D.
  * `depth` is how far (in px) the layer floats above the card face on hover.
  */
-export function CardLayer({ depth = 0, children, style, ...rest }) {
+export function CardLayer({ depth = 0, children, style }) {
   return (
-    <div className="card3d-layer" style={{ "--depth": depth, ...style }} {...rest}>
+    <div className="card3d-layer" style={{ "--depth": depth, ...style }}>
       {children}
     </div>
   );

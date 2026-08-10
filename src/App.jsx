@@ -1,3 +1,16 @@
+/**
+ * App.jsx — the whole site.
+ *
+ * Layout of this file, top to bottom:
+ *   1. CONTENT      the data every section renders from (edit here, not in JSX)
+ *   2. SkillGraph   the hero's Three.js node graph
+ *   3. Home         hero → about → projects → skills → contact
+ *   4. Portfolio    global styles, fixed header, footer
+ *
+ * Styling is inline `style` objects driven by the tokens in theme.js. The one
+ * <style> block in Portfolio() holds only what inline styles can't express:
+ * hover states, keyframes, and media queries.
+ */
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import {
@@ -9,13 +22,16 @@ import { C, MONO, SANS, HEADER_H, FONT_IMPORT } from "./theme";
 import { ErrorBoundary, TiltCard, Reveal, CommentHeader, SectionShell } from "./ui";
 import { CARD3D_CSS } from "./Card3D";
 import ParticleField from "./ParticleField";
+import Wireframe3D from "./Wireframe3D";
 import Projects from "./Projects";
 
-/* ---------------------------------------------------------------
-   CONTENT — bio, expertise & philosophy sourced from your LinkedIn
-   "About" section.
---------------------------------------------------------------- */
+/* ===============================================================
+   1. CONTENT
+   Every section reads from these constants, so the copy can be
+   edited without touching any markup.
+   =============================================================== */
 
+/** Age is derived rather than stored so it never goes stale. */
 const calculateAge = (dob) => {
   const today = new Date();
   const birthDate = new Date(dob);
@@ -39,7 +55,6 @@ const PROFILE = {
   role: "Project Engineer",
   company: "Wipro",
   domain: "GenAI Engineering — Agentic AI",
-  university: "KIIT University",
   degree: "B.Tech, Information Technology",
   age: calculateAge("2003-12-22"),
   email: "abhishekpanda2003@gmail.com",
@@ -104,18 +119,42 @@ const NAV = [
   { id: "contact", label: "Contact" },
 ];
 
-/* ---------------------------------------------------------------
-   CONTACT FORM — powered by Formspree (https://formspree.io).
---------------------------------------------------------------- */
+/**
+ * Contact form endpoint. Formspree (https://formspree.io) relays submissions
+ * to email, which keeps this a fully static site with no backend.
+ */
 const FORMSPREE_ENDPOINT = "https://formspree.io/f/mrpzpavk";
 
-/* ---------------------------------------------------------------
-   3D SKILL GRAPH — the signature element.
-   Skills rendered as a node graph (center = Abhishek), because
-   the site owner studies Data Structures & Graphs — the hero
-   literally is one.
---------------------------------------------------------------- */
-function SkillGraph() {
+/* ===============================================================
+   2. SKILL GRAPH — the hero's signature element.
+
+   Skills are drawn as a node graph with "Abhishek" at the centre:
+   a portfolio built around data structures whose hero literally is
+   one. Raw Three.js, no scene-graph framework.
+
+   The node labels are HTML, not 3D text. Each frame their world
+   position is projected to screen space and written to a div's
+   transform, which keeps the type crisp at any zoom.
+   =============================================================== */
+const GRAPH_FOV = 50;
+const GRAPH_FIT_RADIUS = 4.4; // sphere radius (3.6) plus room for its labels
+
+/**
+ * Distance the camera needs to keep the whole sphere in frame at a given
+ * aspect ratio. On narrow/portrait viewports the horizontal field of view is
+ * the binding constraint, so a fixed camera Z would crop the sphere's sides.
+ */
+function fitCameraZ(aspect) {
+  const halfV = (GRAPH_FOV * Math.PI) / 360;
+  const zForHeight = GRAPH_FIT_RADIUS / Math.tan(halfV);
+  const halfH = Math.atan(Math.tan(halfV) * aspect);
+  const zForWidth = GRAPH_FIT_RADIUS / Math.tan(halfH);
+  return Math.max(zForHeight, zForWidth);
+}
+
+/** @param {object} [outerRef] receives the canvas container element, so the
+ *  particle field can punch its hole around exactly where the sphere renders */
+function SkillGraph({ outerRef }) {
   const mountRef = useRef(null);
   const labelsRef = useRef([]);
 
@@ -129,8 +168,8 @@ function SkillGraph() {
       const dims = { width: mount.clientWidth || 800, height: mount.clientHeight || 600 };
 
       const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(50, dims.width / dims.height, 0.1, 100);
-      camera.position.set(0, 0, 9);
+      const camera = new THREE.PerspectiveCamera(GRAPH_FOV, dims.width / dims.height, 0.1, 100);
+      camera.position.set(0, 0, fitCameraZ(dims.width / dims.height));
 
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setSize(dims.width, dims.height);
@@ -205,13 +244,14 @@ function SkillGraph() {
       const dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({ color: 0x1b2b44, size: 0.03 }));
       scene.add(dust);
 
-      let mouseX = 0, mouseY = 0, targetRotX = 0, targetRotY = 0;
+      // pointer position drives the graph's resting tilt, eased in the loop
+      let targetRotX = 0, targetRotY = 0;
       onMouseMove = (e) => {
         const rect = mount.getBoundingClientRect();
-        mouseX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-        mouseY = ((e.clientY - rect.top) / rect.height) * 2 - 1;
-        targetRotY = mouseX * 0.5;
-        targetRotX = mouseY * 0.3;
+        const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;   // -1 … 1
+        const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1;
+        targetRotY = nx * 0.5;
+        targetRotX = ny * 0.3;
       };
       mount.addEventListener("mousemove", onMouseMove);
 
@@ -252,6 +292,7 @@ function SkillGraph() {
         dims.width = w;
         dims.height = h;
         camera.aspect = w / h;
+        camera.position.z = fitCameraZ(camera.aspect);
         camera.updateProjectionMatrix();
         renderer.setSize(w, h);
       };
@@ -276,10 +317,18 @@ function SkillGraph() {
 
   return (
     <div
-      ref={mountRef}
+      ref={(el) => {
+        mountRef.current = el;
+        if (outerRef) outerRef.current = el;
+      }}
+      className="skill-graph"
       style={{
+        // `left` is set in CSS so it can respond to viewport width — the graph
+        // sits beside the hero copy on desktop and dims behind it on mobile
         position: "absolute",
-        inset: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
         cursor: "grab",
         WebkitMaskImage: `linear-gradient(to bottom, transparent 0, transparent ${HEADER_H - 8}px, black ${HEADER_H + 78}px)`,
         maskImage: `linear-gradient(to bottom, transparent 0, transparent ${HEADER_H - 8}px, black ${HEADER_H + 78}px)`,
@@ -312,13 +361,19 @@ function SkillGraph() {
   );
 }
 
-/* ---------------------------------------------------------------
-   HOME PAGE — hero, about, projects, skills, contact.
---------------------------------------------------------------- */
+/* ===============================================================
+   3. PAGE SECTIONS — hero, about, projects, skills, contact.
+   `scrollTo` comes from Portfolio() so the hero's buttons can move
+   the page the same way the nav does.
+   =============================================================== */
 function Home({ scrollTo }) {
   const [formState, setFormState] = useState({ name: "", email: "", message: "" });
   const [status, setStatus] = useState("idle"); // idle | sending | sent | error
-  const heroRef = useRef(null); // particle field punches a hole around this
+  // The particle field clears a circle around the sphere. It tracks the graph
+  // canvas rather than the whole hero — the graph only occupies the right side
+  // on desktop, so masking the hero's centre would blank an area with nothing
+  // in it and leave the sphere sitting on top of particles.
+  const graphRef = useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -353,13 +408,13 @@ function Home({ scrollTo }) {
       {/* interactive constellation behind the whole page, masked out around
           the hero's 3D sphere so the two never overlap */}
       <ErrorBoundary fallback={null}>
-        <ParticleField holeRef={heroRef} />
+        <ParticleField holeRef={graphRef} />
       </ErrorBoundary>
 
       {/* HOME / HERO */}
-      <section ref={heroRef} id="home" style={{ position: "relative", zIndex: 1, minHeight: "100vh", display: "flex", alignItems: "center", overflow: "hidden", paddingTop: HEADER_H }}>
+      <section id="home" style={{ position: "relative", zIndex: 1, minHeight: "100vh", display: "flex", alignItems: "center", overflow: "hidden", paddingTop: HEADER_H }}>
         <ErrorBoundary fallback={null}>
-          <SkillGraph />
+          <SkillGraph outerRef={graphRef} />
         </ErrorBoundary>
         <div style={{ position: "relative", zIndex: 2, maxWidth: 1100, margin: "0 auto", padding: "0 24px", width: "100%", pointerEvents: "none" }}>
           <div style={{ maxWidth: 560 }}>
@@ -460,16 +515,22 @@ function Home({ scrollTo }) {
                 <GraduationCap size={18} color={C.teal} />
                 <h3 style={{ fontFamily: MONO, fontSize: 15, color: C.text, margin: 0, letterSpacing: "0.03em" }}>EDUCATION</h3>
               </div>
-              <div style={{ position: "relative", paddingLeft: 26 }}>
-                <div style={{ position: "absolute", left: 5, top: 6, bottom: 6, width: 1, background: C.line }} />
-                {EDUCATION.map((e) => (
-                  <div key={e.title} style={{ position: "relative", marginBottom: 28 }}>
-                    <div style={{ position: "absolute", left: -26, top: 4, width: 11, height: 11, borderRadius: "50%", background: C.bg, border: `2px solid ${C.teal}` }} />
-                    <div style={{ fontFamily: MONO, fontSize: 12, color: C.teal }}>{e.years}</div>
-                    <div style={{ fontWeight: 700, fontSize: 16, marginTop: 4 }}>{e.title}</div>
-                    <div style={{ color: C.mutedDim, fontSize: 13.5, marginTop: 3 }}>{e.detail}</div>
-                  </div>
-                ))}
+              {/* timeline left, rotating wireframe filling the empty column right */}
+              <div className="edu-grid" style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 0.85fr)", gap: 32, alignItems: "center" }}>
+                <div style={{ position: "relative", paddingLeft: 26 }}>
+                  <div style={{ position: "absolute", left: 5, top: 6, bottom: 6, width: 1, background: C.line }} />
+                  {EDUCATION.map((e) => (
+                    <div key={e.title} style={{ position: "relative", marginBottom: 28 }}>
+                      <div style={{ position: "absolute", left: -26, top: 4, width: 11, height: 11, borderRadius: "50%", background: C.bg, border: `2px solid ${C.teal}` }} />
+                      <div style={{ fontFamily: MONO, fontSize: 12, color: C.teal }}>{e.years}</div>
+                      <div style={{ fontWeight: 700, fontSize: 16, marginTop: 4 }}>{e.title}</div>
+                      <div style={{ color: C.mutedDim, fontSize: 13.5, marginTop: 3 }}>{e.detail}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="edu-visual">
+                  <Wireframe3D height={320} />
+                </div>
               </div>
             </div>
           </Reveal>
@@ -519,7 +580,7 @@ function Home({ scrollTo }) {
       </SectionShell>
 
       {/* CONTACT */}
-      <SectionShell id="contact" alt>
+      <SectionShell id="contact">
         <Reveal>
           <CommentHeader title="Contact Me" />
         </Reveal>
@@ -579,12 +640,37 @@ function Home({ scrollTo }) {
   );
 }
 
-/* ---------------------------------------------------------------
-   ROOT — global styles, header, page, footer.
-   Single page: every nav item scrolls to a section.
---------------------------------------------------------------- */
+/* ===============================================================
+   4. ROOT — global styles, fixed header, footer.
+   One scrolling page: every nav item targets a section id.
+   =============================================================== */
 export default function Portfolio() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const headerRef = useRef(null);
+
+  // HEADER_H is only a layout estimate; the header's real height depends on
+  // font metrics and whether the mobile menu is open. Measure it and publish it
+  // as --header-h so `scroll-margin-top` parks each section's top border
+  // exactly against the header's bottom border, with no leftover sliver.
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const apply = () => {
+      // +1 for the header's bottom border, which sits outside this row
+      document.documentElement.style.setProperty(
+        "--header-h",
+        `${Math.round(el.getBoundingClientRect().height) + 1}px`
+      );
+    };
+    apply();
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(apply) : null;
+    ro?.observe(el);
+    window.addEventListener("resize", apply);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener("resize", apply);
+    };
+  }, []);
 
   const scrollTo = (id) => {
     setMenuOpen(false);
@@ -618,7 +704,8 @@ export default function Portfolio() {
         *, *::before, *::after { box-sizing: border-box; }
         body { font-family: ${SANS}; }
         a { color: inherit; }
-        section { scroll-margin-top: ${HEADER_H}px; }
+        /* --header-h is measured at runtime; HEADER_H is the pre-paint fallback */
+        section { scroll-margin-top: var(--header-h, ${HEADER_H}px); }
         input, textarea { font-family: ${SANS}; }
         input:focus, textarea:focus { outline: 2px solid ${C.teal}; outline-offset: 2px; }
         ::selection { background: ${C.teal}; color: ${C.bg}; }
@@ -634,6 +721,16 @@ export default function Portfolio() {
           60% { transform: translateY(-4px); }
         }
         .bounce { animation: bounce 2s infinite; }
+        /* Keep the sphere clear of the hero copy: beside it on wide screens,
+           and dimmed to a backdrop once the text spans the full width. */
+        .skill-graph { left: 42%; }
+        @media (max-width: 900px) {
+          .skill-graph { left: 0; opacity: 0.38; }
+          /* the timeline takes the full width on small screens — the
+             decorative wireframe would only push content down */
+          .edu-grid { grid-template-columns: 1fr !important; }
+          .edu-visual { display: none !important; }
+        }
         ${CARD3D_CSS}
         @media (max-width: 720px) { .desktop-nav { display: none !important; } .mobile-toggle { display: flex !important; } .contact-grid { grid-template-columns: 1fr !important; } .about-info-grid { grid-template-columns: 1fr !important; } }
         @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
@@ -641,7 +738,9 @@ export default function Portfolio() {
 
       {/* NAV */}
       <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, background: "rgba(10,15,26,0.95)", backdropFilter: "blur(10px)", borderBottom: `1px solid ${C.line}` }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        {/* ref is on this row, not the <header>, so an open mobile menu
+            doesn't inflate the measured offset */}
+        <div ref={headerRef} style={{ maxWidth: 1100, margin: "0 auto", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <button onClick={() => scrollTo("home")} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ width: 8, height: 8, background: C.teal, display: "inline-block" }} />
             <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 17, color: C.text }}>abhishek<span style={{ color: C.teal }}>.dev</span></span>
@@ -678,7 +777,7 @@ export default function Portfolio() {
       {/* position/z-index keeps the footer above the fixed particle backdrop,
           while its transparent background lets it show through */}
       <footer style={{ position: "relative", zIndex: 1, borderTop: `1px solid ${C.line}`, padding: "28px 24px", textAlign: "center", fontFamily: MONO, fontSize: 12.5, color: C.mutedDim }}>
-        © {new Date().getFullYear()} Abhishek Panda — built with React &amp; three.js
+        © {new Date().getFullYear()} {PROFILE.name} — built with React &amp; three.js
       </footer>
     </div>
   );
