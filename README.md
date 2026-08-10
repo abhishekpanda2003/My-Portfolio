@@ -10,7 +10,7 @@ src/main.jsx          React application entry point
 src/App.jsx           global styles, header/footer, routing, and the home page
 src/Projects.jsx      standalone Projects page (own route, not a home section)
 src/Card3D.jsx        pointer-driven 3D card: tilt, cursor glow, parallax layers
-src/ParticleField.jsx interactive 3D constellation background (Projects page)
+src/ParticleField.jsx interactive 3D constellation background (both pages)
 src/ui.jsx            shared UI primitives (ErrorBoundary, TiltCard, Reveal, SectionShell…)
 src/theme.js          palette, fonts, and layout tokens shared by every page
 src/useHashRoute.js   minimal hash router (no routing dependency)
@@ -80,12 +80,26 @@ prefer reduced motion.
 > The entries currently in `PROJECTS` are placeholder scaffolding built around the
 > site's tech stack, not descriptions of shipped work. Replace them before publishing.
 
-## The Projects background
+## The constellation background
 
-`src/ParticleField.jsx` renders an interactive Three.js constellation behind the
-Projects page: a drifting cloud of points where any two closer than a threshold are
-joined by a line, brightest when nearest — so the mesh continuously forms and dissolves.
-The field parallaxes toward the cursor and points are pushed away from it.
+`src/ParticleField.jsx` renders an interactive Three.js constellation behind both
+pages: a drifting cloud of points where any two closer than a threshold are joined by
+a line, brightest when nearest — so the mesh continuously forms and dissolves. The
+field parallaxes toward the cursor and points are pushed away from it.
+
+It is `position: fixed`, so it stays locked to the viewport for the whole scroll,
+including behind the footer. Sections paint above it at `z-index: 1`; on the home page
+they use see-through backgrounds so the field shows through.
+
+On the home page it takes a `holeRef` pointing at the hero. A radial mask punches a
+clear circle around that element so the particles surround the 3D skill graph instead
+of showing through it, and the hole tracks the hero's on-screen position as you scroll,
+travelling off-screen naturally once you pass it. Omit `holeRef` (as the Projects page
+does) for an unmasked field.
+
+> The fixed positioning depends on no ancestor setting `transform`, `filter`,
+> `perspective`, `contain`, or `will-change` — any of those re-anchor a fixed element
+> to that ancestor and the background will stop tracking the viewport.
 
 Tuning constants live at the top of the file: `COUNT` (particles — pair checks are
 O(n²), so raise it carefully), `MAX_LINES`, `CAMERA_Z`, and `FOV`.

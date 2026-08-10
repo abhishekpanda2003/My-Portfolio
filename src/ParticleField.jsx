@@ -26,8 +26,46 @@ const FOV = 60;
 const TEAL = new THREE.Color(0x4fd1c5);
 const AMBER = new THREE.Color(0xf2b705);
 
-export default function ParticleField() {
+/**
+ * @param {object} [holeRef]  optional ref to an element the field should NOT
+ *   render behind (the hero's 3D sphere). A radial mask punches a clear circle
+ *   around it that tracks its position on screen as the page scrolls, so the
+ *   particles surround the sphere instead of showing through it — and the hole
+ *   simply travels off-screen once you scroll past.
+ */
+export default function ParticleField({ holeRef = null }) {
   const mountRef = useRef(null);
+  const wrapRef = useRef(null);
+
+  // keep the mask centred on the hole element while scrolling / resizing
+  useEffect(() => {
+    if (!holeRef) return;
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+
+    let raf = 0;
+    const update = () => {
+      const el = holeRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      wrap.style.setProperty("--hx", `${r.left + r.width / 2}px`);
+      wrap.style.setProperty("--hy", `${r.top + r.height / 2}px`);
+      wrap.style.setProperty("--hr", `${Math.min(r.width, r.height) * 0.52}px`);
+    };
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [holeRef]);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -284,13 +322,38 @@ export default function ParticleField() {
   }, []);
 
   return (
+    // `fixed`, not `absolute`/`sticky`: the backdrop must stay locked to the
+    // viewport for the entire page, including behind the footer, which lives
+    // outside <main>. A sticky canvas is bounded by its parent, so it detached
+    // and slid away at the bottom of the scroll.
+    //
+    // Two things this relies on:
+    //  - No ancestor may set `transform`, `filter`, `perspective`, `contain`,
+    //    or `will-change` — any of those would make this fixed to that ancestor
+    //    instead of to the viewport.
+    //  - z-index 0 puts it above the page background but below the sections
+    //    and footer (both z-index 1), so content always paints on top.
     <div
+      ref={wrapRef}
       aria-hidden="true"
-      style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 0 }}
+      style={{
+        position: "fixed",
+        inset: 0,
+        pointerEvents: "none",
+        zIndex: 0,
+        ...(holeRef
+          ? {
+              // clear circle around the hole element, soft-edged so the
+              // constellation fades in rather than cutting off abruptly
+              WebkitMaskImage:
+                "radial-gradient(circle var(--hr, 320px) at var(--hx, 50%) var(--hy, 50%), transparent 0, transparent 52%, #000 100%)",
+              maskImage:
+                "radial-gradient(circle var(--hr, 320px) at var(--hx, 50%) var(--hy, 50%), transparent 0, transparent 52%, #000 100%)",
+            }
+          : null),
+      }}
     >
-      {/* sticky keeps one viewport-sized canvas in view as the page scrolls,
-          instead of stretching the scene over the full document height */}
-      <div ref={mountRef} style={{ position: "sticky", top: 0, height: "100vh", width: "100%" }} />
+      <div ref={mountRef} style={{ width: "100%", height: "100%" }} />
     </div>
   );
 }

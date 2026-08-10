@@ -52,8 +52,24 @@ export function TiltCard({ children, style, className }) {
 }
 
 /* ---------------------------------------------------------------
-   REVEAL ON SCROLL — replays every time the element re-enters view
+   REVEAL ON SCROLL — animates in on the way DOWN only.
+
+   Scrolling back up must never replay the fade, but the reveal should still
+   re-arm so a later downward pass animates again. Two rules get both:
+
+     reveal  when the element becomes ≥15% visible
+     re-arm  only once it is *completely* below the viewport
+
+   Resetting solely below the fold means the element is off-screen when its
+   opacity snaps back — so scrolling up is perfectly still. Anything that
+   leaves via the top simply stays revealed, so scrolling back up over it
+   shows it already in place.
 --------------------------------------------------------------- */
+const REVEAL_DURATION = 0.38;   // seconds
+const REVEAL_STAGGER = 0.45;    // scales the per-item `delay` prop
+const REVEAL_TRAVEL = 14;       // px the element rises as it fades in
+const REVEAL_THRESHOLD = 0.15;  // visible fraction that triggers the reveal
+
 export function Reveal({ children, delay = 0 }) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
@@ -61,19 +77,31 @@ export function Reveal({ children, delay = 0 }) {
     const el = ref.current;
     if (!el) return;
     const obs = new IntersectionObserver(
-      ([entry]) => setVisible(entry.isIntersecting),
-      { threshold: 0.15 }
+      (entries) => {
+        const entry = entries[entries.length - 1];
+        if (entry.intersectionRatio >= REVEAL_THRESHOLD) {
+          setVisible(true);
+        } else if (!entry.isIntersecting && entry.boundingClientRect.top > 0) {
+          // fully past the bottom edge: re-arm out of sight
+          setVisible(false);
+        }
+      },
+      // 0 fires when it clears the viewport entirely, 0.15 when it reveals
+      { threshold: [0, REVEAL_THRESHOLD] }
     );
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
+  const ms = Math.round(delay * REVEAL_STAGGER);
+  const ease = `${REVEAL_DURATION}s cubic-bezier(0.22, 0.9, 0.3, 1) ${ms}ms`;
+
   return (
     <div
       ref={ref}
       style={{
         opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(24px)",
-        transition: `opacity 0.7s ease ${delay}ms, transform 0.7s ease ${delay}ms`,
+        transform: visible ? "translateY(0)" : `translateY(${REVEAL_TRAVEL}px)`,
+        transition: `opacity ${ease}, transform ${ease}`,
       }}
     >
       {children}
@@ -82,7 +110,7 @@ export function Reveal({ children, delay = 0 }) {
 }
 
 /* ---------------------------------------------------------------
-   SMALL BITS
+    SMALL BITS
 --------------------------------------------------------------- */
 export function CommentHeader({ title }) {
   return (
@@ -116,8 +144,11 @@ export function SectionShell({ id, children, alt, style }) {
       id={id}
       style={{
         position: "relative",
+        // z-index keeps section content above the fixed particle backdrop;
+        // backgrounds are see-through so the constellation shows behind them
+        zIndex: 1,
         padding: "110px 24px",
-        background: alt ? C.panelAlt : C.bg,
+        background: alt ? "rgba(12, 20, 32, 0.72)" : "transparent",
         borderTop: `1px solid ${C.line}`,
         overflow: "hidden",
         ...style,

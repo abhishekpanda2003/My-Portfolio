@@ -9,6 +9,7 @@ import { C, MONO, SANS, HEADER_H, FONT_IMPORT } from "./theme";
 import { ErrorBoundary, TiltCard, Reveal, CommentHeader, SectionShell } from "./ui";
 import { useHashRoute, navigate, ROUTES } from "./useHashRoute";
 import { CARD3D_CSS } from "./Card3D";
+import ParticleField from "./ParticleField";
 import Projects from "./Projects";
 
 /* ---------------------------------------------------------------
@@ -312,6 +313,7 @@ function SkillGraph() {
 function Home({ scrollTo }) {
   const [formState, setFormState] = useState({ name: "", email: "", message: "" });
   const [status, setStatus] = useState("idle"); // idle | sending | sent | error
+  const heroRef = useRef(null); // particle field punches a hole around this
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -342,9 +344,15 @@ function Home({ scrollTo }) {
   };
 
   return (
-    <main>
+    <main style={{ position: "relative", background: C.bg }}>
+      {/* interactive constellation behind the whole page, masked out around
+          the hero's 3D sphere so the two never overlap */}
+      <ErrorBoundary fallback={null}>
+        <ParticleField holeRef={heroRef} />
+      </ErrorBoundary>
+
       {/* HOME / HERO */}
-      <section id="home" style={{ position: "relative", minHeight: "100vh", display: "flex", alignItems: "center", overflow: "hidden", paddingTop: HEADER_H }}>
+      <section ref={heroRef} id="home" style={{ position: "relative", zIndex: 1, minHeight: "100vh", display: "flex", alignItems: "center", overflow: "hidden", paddingTop: HEADER_H }}>
         <ErrorBoundary fallback={null}>
           <SkillGraph />
         </ErrorBoundary>
@@ -627,6 +635,14 @@ export default function Portfolio() {
           background: ${C.bg};
           color: ${C.text};
         }
+        /* hide the scrollbars without disabling scrolling */
+        html, body {
+          overflow-x: hidden;
+          scrollbar-width: none;      /* Firefox */
+          -ms-overflow-style: none;   /* legacy Edge */
+        }
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar { width: 0; height: 0; display: none; }
         *, *::before, *::after { box-sizing: border-box; }
         body { font-family: ${SANS}; }
         a { color: inherit; }
@@ -690,7 +706,9 @@ export default function Portfolio() {
         {route === ROUTES.PROJECTS ? <Projects /> : <Home scrollTo={scrollTo} />}
       </ErrorBoundary>
 
-      <footer style={{ borderTop: `1px solid ${C.line}`, padding: "28px 24px", textAlign: "center", fontFamily: MONO, fontSize: 12.5, color: C.mutedDim }}>
+      {/* position/z-index keeps the footer above the Projects page's fixed
+          particle backdrop, while its transparent background lets it show through */}
+      <footer style={{ position: "relative", zIndex: 1, borderTop: `1px solid ${C.line}`, padding: "28px 24px", textAlign: "center", fontFamily: MONO, fontSize: 12.5, color: C.mutedDim }}>
         © {new Date().getFullYear()} Abhishek Panda — built with React &amp; three.js
       </footer>
     </div>
