@@ -119,6 +119,80 @@ const NAV = [
   { id: "contact", label: "Contact" },
 ];
 
+/* ---------------------------------------------------------------
+   BRAND MARK
+
+   One source file — `public/logo.png`, the full lockup (monogram over
+   the name). Referenced through BASE_URL so it resolves from a root
+   domain and from a subdirectory (GitHub Pages) alike.
+
+   The artwork is dark navy on white, which would be invisible on this
+   background, so the `.brand-mark` CSS recolours it to near-white and
+   drops the white plate. See the rule in Portfolio()'s <style> block.
+
+   The header needs just the monogram — the name lettering is illegible
+   at 28px — so BrandMark crops to it with a CSS window rather than
+   requiring a second, separately-exported file.
+--------------------------------------------------------------- */
+const LOGO_FULL = `${import.meta.env.BASE_URL}logo.png`;
+
+/**
+ * Where the monogram sits inside logo.png, as fractions of the image's
+ * width/height from its top-left corner.
+ *
+ * These are the only numbers tied to how the logo file is composed. If the
+ * header mark looks off-centre or clipped, nudge them here — nothing else
+ * needs to change. Re-export the logo with different padding and these are
+ * what you update.
+ */
+const MARK_CROP = { x: 0.33, y: 0.25, w: 0.34, h: 0.29 };
+
+/**
+ * Header monogram: the lockup scaled up behind a small square window so only
+ * the mark shows. Falls back to the original teal square if the image is
+ * missing, so the nav never renders a broken-image icon.
+ */
+function BrandMark({ size = 28 }) {
+  const [failed, setFailed] = useState(false);
+
+  if (failed) {
+    return <span style={{ width: 8, height: 8, background: C.teal, display: "inline-block" }} />;
+  }
+
+  // enlarge the whole image until the crop region is `size` wide, then shift
+  // the region into view and centre it vertically in the window
+  const scaled = size / MARK_CROP.w;
+  const offsetY = -MARK_CROP.y * scaled + (size - MARK_CROP.h * scaled) / 2;
+
+  return (
+    <span
+      style={{
+        display: "block",
+        position: "relative",
+        width: size,
+        height: size,
+        overflow: "hidden",
+        flexShrink: 0,
+      }}
+    >
+      <img
+        src={LOGO_FULL}
+        alt=""
+        aria-hidden="true"
+        className="brand-mark"
+        onError={() => setFailed(true)}
+        style={{
+          position: "absolute",
+          left: -MARK_CROP.x * scaled,
+          top: offsetY,
+          width: scaled,
+          maxWidth: "none", // beat the global img max-width so the zoom holds
+        }}
+      />
+    </span>
+  );
+}
+
 /**
  * Contact form endpoint. Formspree (https://formspree.io) relays submissions
  * to email, which keeps this a fully static site with no backend.
@@ -721,6 +795,23 @@ export default function Portfolio() {
           60% { transform: translateY(-4px); }
         }
         .bounce { animation: bounce 2s infinite; }
+        /* Recolour the logo to read on the dark background, without needing a
+           separate light-coloured export. Step by step:
+             invert(1)     dark navy artwork -> pale cream;
+                           the white plate around it -> black
+             grayscale(1)  drops the cream tint, leaving neutral grey
+             brightness()  pushes that grey up to effectively white
+             screen blend  black is the identity colour for screen blending,
+                           so the inverted white plate blends away to nothing
+                           and the page shows through — no white box, and no
+                           need for a transparent PNG
+           This works on a transparent export too: transparent pixels stay
+           transparent through the filter, and screen leaves them untouched.
+           If you ever supply an already-light logo, delete this whole rule. */
+        .brand-mark {
+          filter: invert(1) grayscale(1) brightness(1.45) contrast(1.1);
+          mix-blend-mode: screen;
+        }
         /* Keep the sphere clear of the hero copy: beside it on wide screens,
            and dimmed to a backdrop once the text spans the full width. */
         .skill-graph { left: 42%; }
@@ -741,8 +832,8 @@ export default function Portfolio() {
         {/* ref is on this row, not the <header>, so an open mobile menu
             doesn't inflate the measured offset */}
         <div ref={headerRef} style={{ maxWidth: 1100, margin: "0 auto", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <button onClick={() => scrollTo("home")} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ width: 8, height: 8, background: C.teal, display: "inline-block" }} />
+          <button onClick={() => scrollTo("home")} aria-label="Back to top" style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
+            <BrandMark />
             <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 17, color: C.text }}>abhishek<span style={{ color: C.teal }}>.dev</span></span>
           </button>
 
@@ -776,7 +867,17 @@ export default function Portfolio() {
 
       {/* position/z-index keeps the footer above the fixed particle backdrop,
           while its transparent background lets it show through */}
-      <footer style={{ position: "relative", zIndex: 1, borderTop: `1px solid ${C.line}`, padding: "28px 24px", textAlign: "center", fontFamily: MONO, fontSize: 12.5, color: C.mutedDim }}>
+      <footer style={{ position: "relative", zIndex: 1, borderTop: `1px solid ${C.line}`, padding: "34px 24px 28px", textAlign: "center", fontFamily: MONO, fontSize: 12.5, color: C.mutedDim }}>
+        {/* full lockup — the name lettering is legible at this size.
+            hidden entirely if the file is missing, rather than showing
+            a broken-image icon above the copyright line */}
+        <img
+          src={LOGO_FULL}
+          alt={`${PROFILE.name} logo`}
+          className="brand-mark"
+          onError={(e) => { e.currentTarget.style.display = "none"; }}
+          style={{ display: "block", width: 108, height: "auto", margin: "0 auto 18px", opacity: 0.75 }}
+        />
         © {new Date().getFullYear()} {PROFILE.name} — built with React &amp; three.js
       </footer>
     </div>

@@ -2,18 +2,18 @@ import { useEffect, useRef } from "react";
 import { C } from "./theme";
 
 /* ---------------------------------------------------------------
-   CARD 3D — pointer-driven 3D card.
+    CARD 3D — pointer-driven 3D card.
 
-   Four effects layered together:
-     1. tilt    — the card rotates toward the cursor on two axes
-     2. glow    — a soft teal pool of light follows the cursor
-     3. border  — a 1px ring that lights up nearest the cursor
-     4. parallax— inner content sits at different translateZ depths,
-                  so the title floats above the background as it tilts
+    Four effects layered together:
+      1. tilt    — the card rotates toward the cursor on two axes
+      2. glow    — a soft teal pool of light follows the cursor
+      3. border  — a 1px ring that lights up nearest the cursor
+      4. parallax— inner content sits at different translateZ depths,
+                    so the title floats above the background as it tilts
 
-   Everything is driven by CSS custom properties written straight to
-   the DOM node inside a rAF, so moving the mouse never re-renders
-   React. The card only pays for the effect while it is hovered.
+    Everything is driven by CSS custom properties written straight to
+    the DOM node inside a rAF, so moving the mouse never re-renders
+    React. The card only pays for the effect while it is hovered.
 --------------------------------------------------------------- */
 
 /** Injected once by App.jsx into the global <style> block. */

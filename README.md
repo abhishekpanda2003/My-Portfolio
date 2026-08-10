@@ -18,7 +18,8 @@ No CSS framework, no router, no state library — the only runtime dependencies 
 ## Project structure
 
 ```
-index.html              application shell
+index.html              application shell, favicon + social preview meta
+public/logo.png         logo lockup — the only brand asset needed
 src/main.jsx            React entry point
 src/App.jsx             content data, hero skill graph, all page sections, header/footer
 src/Projects.jsx        Projects section — project data + filterable card grid
@@ -64,6 +65,58 @@ All copy is plain data — no markup editing required.
 
 > The entries in `PROJECTS` are placeholder scaffolding built around the site's
 > tech stack, not descriptions of shipped work. Replace them before publishing.
+
+## Brand assets
+
+A single file — `public/logo.png`, the full lockup (monogram above the name).
+It is referenced through `import.meta.env.BASE_URL` so it resolves from a root
+domain and from a subdirectory alike, and it serves three roles:
+
+| Where   | How it's used                                              |
+| ------- | ---------------------------------------------------------- |
+| Header  | cropped to just the monogram, 28px                          |
+| Footer  | full lockup, 108px wide                                     |
+| Browser | favicon, apple-touch-icon, and link-preview image           |
+
+### Recolouring (no light-coloured export needed)
+
+The artwork is dark navy on white; the site background is dark navy, so as-is it
+would be invisible. The `.brand-mark` rule in `App.jsx` fixes that in CSS:
+
+```css
+filter: invert(1) grayscale(1) brightness(1.45) contrast(1.1);
+mix-blend-mode: screen;
+```
+
+`invert` turns the navy artwork pale and the white plate black; `grayscale` and
+`brightness` push the artwork to near-white; and because black is the identity
+colour for **screen** blending, the inverted plate blends away to nothing — so
+the white background disappears without needing a transparent PNG. The same rule
+also works correctly on a transparent export.
+
+If you ever supply an already-light version of the logo, delete the whole rule.
+
+### Cropping the header monogram
+
+At 28px the "ABHISHEK PANDA" lettering is illegible, so the header shows only
+the monogram — scaled up behind a small square window rather than requiring a
+second exported file. `MARK_CROP` in `src/App.jsx` describes where the monogram
+sits inside the image, as fractions of its width and height:
+
+```js
+const MARK_CROP = { x: 0.33, y: 0.25, w: 0.34, h: 0.29 };
+```
+
+**These values are estimated from the current logo file.** If the header mark
+looks off-centre or clipped, nudge them — they are the only numbers tied to how
+the logo is composed, and nothing else needs to change.
+
+A missing file degrades gracefully: the header falls back to a plain teal square
+and the footer logo hides itself, rather than showing broken-image icons.
+
+For link previews, `og:image` in `index.html` should become an **absolute** URL
+(e.g. `https://your-domain.com/logo.png`) once the domain is settled — most
+scrapers won't resolve a relative path.
 
 ## The 3D pieces
 
