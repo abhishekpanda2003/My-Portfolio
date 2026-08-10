@@ -454,7 +454,14 @@ export default function Portfolio() {
     <div style={{ background: C.bg, color: C.text, fontFamily: "'Inter', sans-serif", minHeight: "100vh" }}>
       <style>{`
         ${FONT_IMPORT}
-        * { box-sizing: border-box; }
+        html, body, #root {
+          margin: 0;
+          min-height: 100%;
+          background: ${C.bg};
+          color: ${C.text};
+        }
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; }
         a { color: inherit; }
         input, textarea { font-family: 'Inter', sans-serif; }
         input:focus, textarea:focus { outline: 2px solid ${C.teal}; outline-offset: 2px; }
@@ -468,7 +475,7 @@ export default function Portfolio() {
       `}</style>
 
       {/* NAV */}
-      <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, background: "rgba(10,15,26,0.85)", backdropFilter: "blur(10px)", borderBottom: `1px solid ${C.line}` }}>
+      <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, background: "rgba(10,15,26,0.95)", backdropFilter: "blur(10px)", borderBottom: `1px solid ${C.line}` }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <button onClick={() => scrollTo("home")} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ width: 8, height: 8, background: C.teal, display: "inline-block" }} />
@@ -476,10 +483,10 @@ export default function Portfolio() {
           </button>
 
           <nav className="desktop-nav" style={{ display: "flex", gap: 32 }}>
-            {NAV.map((item, i) => (
+            {NAV.map((item) => (
               <button key={item.id} className="nav-link" onClick={() => scrollTo(item.id)}
                 style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: C.muted, letterSpacing: "0.03em" }}>
-                <span style={{ color: C.mutedDim }}>{String(i + 1).padStart(2, "0")}·</span> {item.label}
+                {item.label}
               </button>
             ))}
           </nav>
@@ -519,9 +526,9 @@ export default function Portfolio() {
               {PROFILE.bioShort}
             </p>
             <div style={{ display: "flex", gap: 14, marginTop: 34, pointerEvents: "auto", flexWrap: "wrap" }}>
-              <button className="cv-btn" style={{ display: "flex", alignItems: "center", gap: 8, background: "transparent", border: `1px solid ${C.teal}`, color: C.teal, padding: "13px 22px", fontFamily: "'JetBrains Mono', monospace", fontSize: 13.5, fontWeight: 700, cursor: "pointer", transition: "all 0.2s" }}>
+              <a className="cv-btn" href="https://docs.google.com/document/d/1_9myuwsSmQid2T5ee56AJ8-MoUfETkP8SFX7F3TJ72s/export?format=pdf" target="_blank" rel="noreferrer noopener" download="Abhishek-Panda-Resume.pdf" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "transparent", border: `1px solid ${C.teal}`, color: C.teal, padding: "13px 22px", fontFamily: "'JetBrains Mono', monospace", fontSize: 13.5, fontWeight: 700, cursor: "pointer", transition: "all 0.2s", textDecoration: "none" }}>
                 <Download size={15} /> Download CV
-              </button>
+              </a>
               <button onClick={() => scrollTo("contact")} style={{ background: "transparent", border: `1px solid ${C.line}`, color: C.muted, padding: "13px 22px", fontFamily: "'JetBrains Mono', monospace", fontSize: 13.5, cursor: "pointer" }}>
                 Get in touch
               </button>
