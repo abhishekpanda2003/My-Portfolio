@@ -49,6 +49,25 @@ class ErrorBoundary extends Component {
    "About" section. Birthday/age are still from the original site
    since LinkedIn didn't include them — update freely.
 --------------------------------------------------------------- */
+
+const calculateAge = (dob) => {
+  const today = new Date();
+  const birthDate = new Date(dob);
+
+  let age = today.getFullYear() - birthDate.getFullYear();
+
+  const monthDifference = today.getMonth() - birthDate.getMonth();
+
+  if (
+    monthDifference < 0 ||
+    (monthDifference === 0 && today.getDate() < birthDate.getDate())
+  ) {
+    age--;
+  }
+
+  return age;
+};
+
 const PROFILE = {
   name: "Abhishek Panda",
   role: "Project Engineer",
@@ -56,9 +75,8 @@ const PROFILE = {
   domain: "GenAI Engineering — Agentic AI",
   university: "KIIT University",
   degree: "B.Tech, Information Technology",
-  birthday: "22 Dec 2003",
-  age: 20,
-  email: "abhishekpanda494@gmail.com",
+  age: calculateAge("2003-12-22"),
+  email: "abhishekpanda2003@gmail.com",
   phone: "+91 7383699772",
   bioShort:
     "As a Project Engineer at Wipro, I now work on the GenAI Engineering team, designing and building agentic AI systems — LLM-powered agents that plan, reason, and act autonomously. I started my journey here in Security Intelligence & Assurance (SIA), which shaped how I think about building resilient, trustworthy systems. My technical foundation goes back to KIIT University, where I earned my B.Tech in Information Technology.",
@@ -136,15 +154,14 @@ function SkillGraph() {
     let renderer, raf, onMouseMove, onResize;
 
     try {
-      const width = mount.clientWidth || 800;
-      const height = mount.clientHeight || 600;
+      const dims = { width: mount.clientWidth || 800, height: mount.clientHeight || 600 };
 
       const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 100);
+      const camera = new THREE.PerspectiveCamera(50, dims.width / dims.height, 0.1, 100);
       camera.position.set(0, 0, 9);
 
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      renderer.setSize(width, height);
+      renderer.setSize(dims.width, dims.height);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       mount.appendChild(renderer.domElement);
 
@@ -240,12 +257,13 @@ function SkillGraph() {
       nodeMeshes.forEach((mesh, i) => {
         mesh.getWorldPosition(projected);
         const v = projected.clone().project(camera);
-        const x = (v.x * 0.5 + 0.5) * width;
-        const y = (-v.y * 0.5 + 0.5) * height;
+        const x = (v.x * 0.5 + 0.5) * dims.width;
+        const y = (-v.y * 0.5 + 0.5) * dims.height;
         const el = labelsRef.current[i];
         if (el) {
-          el.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px)`;
           const scale = THREE.MathUtils.clamp(1 - v.z * 0.3, 0.55, 1.15);
+          const dropBelow = (i === 0 ? 22 : 16) * scale;
+          el.style.transform = `translate(-50%, 0%) translate(${x}px, ${y + dropBelow}px)`;
           el.style.opacity = v.z < 1 ? String(THREE.MathUtils.clamp(1.2 - v.z, 0.15, 1)) : "0";
           el.style.fontSize = `${11 * scale}px`;
         }
@@ -259,6 +277,8 @@ function SkillGraph() {
     onResize = () => {
       const w = mount.clientWidth, h = mount.clientHeight;
       if (!w || !h) return;
+      dims.width = w;
+      dims.height = h;
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
@@ -283,7 +303,16 @@ function SkillGraph() {
   const labels = ["Abhishek", ...GRAPH_SKILLS];
 
   return (
-    <div ref={mountRef} style={{ position: "absolute", inset: 0, cursor: "grab" }}>
+    <div
+      ref={mountRef}
+      style={{
+        position: "absolute",
+        inset: 0,
+        cursor: "grab",
+        WebkitMaskImage: "linear-gradient(to bottom, transparent 0, transparent 64px, black 150px)",
+        maskImage: "linear-gradient(to bottom, transparent 0, transparent 64px, black 150px)",
+      }}
+    >
       {labels.map((label, i) => (
         <div
           key={label}
@@ -296,8 +325,11 @@ function SkillGraph() {
             whiteSpace: "nowrap",
             fontFamily: "'JetBrains Mono', monospace",
             fontWeight: i === 0 ? 700 : 500,
-            color: i === 0 ? C.amber : C.teal,
+            color: i === 0 ? C.amber : C.text,
             letterSpacing: "0.02em",
+            background: "rgba(10,15,26,0.6)",
+            padding: "1px 6px",
+            borderRadius: 3,
             textShadow: "0 0 8px rgba(0,0,0,0.9)",
           }}
         >
@@ -346,7 +378,7 @@ function Reveal({ children, delay = 0 }) {
     const el = ref.current;
     if (!el) return;
     const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      ([entry]) => setVisible(entry.isIntersecting),
       { threshold: 0.15 }
     );
     obs.observe(el);
@@ -369,12 +401,9 @@ function Reveal({ children, delay = 0 }) {
 /* ---------------------------------------------------------------
    SMALL BITS
 --------------------------------------------------------------- */
-function CommentHeader({ index, label, title }) {
+function CommentHeader({ title }) {
   return (
     <div style={{ marginBottom: 40 }}>
-      <div style={{ fontFamily: "'JetBrains Mono', monospace", color: C.mutedDim, fontSize: 13, marginBottom: 8 }}>
-        {`// ${index}_${label.toUpperCase().replace(/\s/g, "_")}`}
-      </div>
       <h2 style={{ fontFamily: "'JetBrains Mono', monospace", color: C.text, fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 800, margin: 0, letterSpacing: "-0.01em" }}>
         {title}
       </h2>
@@ -533,9 +562,6 @@ export default function Portfolio() {
                 Get in touch
               </button>
             </div>
-            <p style={{ fontSize: 11.5, color: C.mutedDim, marginTop: 16, fontFamily: "'JetBrains Mono', monospace" }}>
-              drag the graph — each node is a skill →
-            </p>
           </div>
         </div>
         <button onClick={() => scrollTo("about")} style={{ position: "absolute", bottom: 28, left: "50%", transform: "translateX(-50%)", background: "none", border: "none", color: C.mutedDim, cursor: "pointer", zIndex: 2 }}>
@@ -546,7 +572,7 @@ export default function Portfolio() {
       {/* ABOUT */}
       <SectionShell id="about">
         <Reveal>
-          <CommentHeader index="02" label="about" title="About Me" />
+          <CommentHeader title="About Me" />
         </Reveal>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 60 }}>
@@ -562,7 +588,7 @@ export default function Portfolio() {
                   ["degree", PROFILE.degree],
                   ["email", PROFILE.email],
                   ["phone", PROFILE.phone],
-                  ["birthday", PROFILE.birthday],
+                  ["age", PROFILE.age],
                 ].map(([k, v]) => (
                   <div key={k} style={{ display: "flex", justifyContent: "space-between", gap: 16, padding: "9px 0", borderBottom: `1px solid ${C.lineSoft}`, color: C.muted }}>
                     <span style={{ color: C.mutedDim }}>{k}:</span>
@@ -635,7 +661,7 @@ export default function Portfolio() {
       {/* SKILLS */}
       <SectionShell id="skills" alt>
         <Reveal>
-          <CommentHeader index="03" label="skills" title="Skills & Stack" />
+          <CommentHeader title="Skills & Stack" />
         </Reveal>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18 }}>
           {SKILLS.map((s, i) => (
@@ -658,7 +684,7 @@ export default function Portfolio() {
       {/* CONTACT */}
       <SectionShell id="contact">
         <Reveal>
-          <CommentHeader index="04" label="contact" title="Contact Me" />
+          <CommentHeader title="Contact Me" />
         </Reveal>
 
         <div className="contact-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1.3fr", gap: 48, alignItems: "start" }}>
@@ -697,7 +723,6 @@ export default function Portfolio() {
 
           <Reveal delay={140}>
             <form onSubmit={handleSubmit} style={{ background: C.panel, border: `1px solid ${C.line}`, padding: 28 }}>
-              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: C.mutedDim, marginBottom: 20 }}>// drop me an email</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <input required value={formState.name} onChange={(e) => setFormState({ ...formState, name: e.target.value })}
                   placeholder="Your name" style={{ background: C.bg, border: `1px solid ${C.line}`, color: C.text, padding: "12px 14px", fontSize: 14 }} />
